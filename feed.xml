@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
     <title>w4nn4d13</title>
-    <link href="https://w4nn4d13.github.io/feed.xml" rel="self" />
-    <link href="https://w4nn4d13.github.io" />
+    <link href="https://w4nn4d13.tech/feed.xml" rel="self" />
+    <link href="https://w4nn4d13.tech" />
     <updated>2026-06-13T15:39:57+05:30</updated>
     <author>
         <name>w4nn4d13</name>
     </author>
-    <id>https://w4nn4d13.github.io</id>
+    <id>https://w4nn4d13.tech</id>
 
     <entry>
         <title>CVE-2026-9506: Unauthenticated Local File Inclusion (LFI) in Bagisto</title>
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.github.io/cve-2026-9506-unauthenticated-local-file-inclusion-lfi-in-bagisto/"/>
-        <id>https://w4nn4d13.github.io/cve-2026-9506-unauthenticated-local-file-inclusion-lfi-in-bagisto/</id>
+        <link href="https://w4nn4d13.tech/cve-2026-9506-unauthenticated-local-file-inclusion-lfi-in-bagisto/"/>
+        <id>https://w4nn4d13.tech/cve-2026-9506-unauthenticated-local-file-inclusion-lfi-in-bagisto/</id>
             <category term="Web Application Security"/>
             <category term="Security Research"/>
             <category term="CVE"/>
@@ -77,8 +77,8 @@
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.github.io/the-complete-guide-to-crosssite-scripting-xss/"/>
-        <id>https://w4nn4d13.github.io/the-complete-guide-to-crosssite-scripting-xss/</id>
+        <link href="https://w4nn4d13.tech/the-complete-guide-to-crosssite-scripting-xss/"/>
+        <id>https://w4nn4d13.tech/the-complete-guide-to-crosssite-scripting-xss/</id>
             <category term="Web Application Security"/>
             <category term="Security Research"/>
             <category term="Cross-Site Scripting (XSS)"/>
@@ -1337,8 +1337,8 @@ script:alert(1)')"&gt;
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.github.io/cve-2026-48098-unsafe-use-of-sudo-and-shelltrue-in-nextor-ip-changer/"/>
-        <id>https://w4nn4d13.github.io/cve-2026-48098-unsafe-use-of-sudo-and-shelltrue-in-nextor-ip-changer/</id>
+        <link href="https://w4nn4d13.tech/cve-2026-48098-unsafe-use-of-sudo-and-shelltrue-in-nextor-ip-changer/"/>
+        <id>https://w4nn4d13.tech/cve-2026-48098-unsafe-use-of-sudo-and-shelltrue-in-nextor-ip-changer/</id>
             <category term="Remediation"/>
             <category term="CVE"/>
 
@@ -1426,8 +1426,8 @@ script:alert(1)')"&gt;
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.github.io/cve-2026-48097-path-injection-leading-to-arbitrary-command-execution-in-nextor-ip-changer/"/>
-        <id>https://w4nn4d13.github.io/cve-2026-48097-path-injection-leading-to-arbitrary-command-execution-in-nextor-ip-changer/</id>
+        <link href="https://w4nn4d13.tech/cve-2026-48097-path-injection-leading-to-arbitrary-command-execution-in-nextor-ip-changer/"/>
+        <id>https://w4nn4d13.tech/cve-2026-48097-path-injection-leading-to-arbitrary-command-execution-in-nextor-ip-changer/</id>
             <category term="Remediation"/>
             <category term="CVE"/>
 
@@ -1513,8 +1513,8 @@ script:alert(1)')"&gt;
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.github.io/cve-2026-44720-authentication-bypass-via-disabled-jwt-signature-verification-in-openlearnx/"/>
-        <id>https://w4nn4d13.github.io/cve-2026-44720-authentication-bypass-via-disabled-jwt-signature-verification-in-openlearnx/</id>
+        <link href="https://w4nn4d13.tech/cve-2026-44720-authentication-bypass-via-disabled-jwt-signature-verification-in-openlearnx/"/>
+        <id>https://w4nn4d13.tech/cve-2026-44720-authentication-bypass-via-disabled-jwt-signature-verification-in-openlearnx/</id>
             <category term="Remediation"/>
             <category term="CVE"/>
 
@@ -1608,8 +1608,8 @@ script:alert(1)')"&gt;
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.github.io/cve-2026-41900-remote-code-execution-via-sandbox-escape-in-openlearnx/"/>
-        <id>https://w4nn4d13.github.io/cve-2026-41900-remote-code-execution-via-sandbox-escape-in-openlearnx/</id>
+        <link href="https://w4nn4d13.tech/cve-2026-41900-remote-code-execution-via-sandbox-escape-in-openlearnx/"/>
+        <id>https://w4nn4d13.tech/cve-2026-41900-remote-code-execution-via-sandbox-escape-in-openlearnx/</id>
             <category term="Remediation"/>
             <category term="CVE"/>
 
@@ -1694,8 +1694,8 @@ script:alert(1)')"&gt;
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.github.io/cve-2026-41575-dom-based-cross-site-scripting-xss-in-ip-reputation-checker/"/>
-        <id>https://w4nn4d13.github.io/cve-2026-41575-dom-based-cross-site-scripting-xss-in-ip-reputation-checker/</id>
+        <link href="https://w4nn4d13.tech/cve-2026-41575-dom-based-cross-site-scripting-xss-in-ip-reputation-checker/"/>
+        <id>https://w4nn4d13.tech/cve-2026-41575-dom-based-cross-site-scripting-xss-in-ip-reputation-checker/</id>
             <category term="Remediation"/>
             <category term="CVE"/>
 
@@ -1769,8 +1769,8 @@ script:alert(1)')"&gt;
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.github.io/cve-2026-32138-api-key-exposure-in-nexulean-website/"/>
-        <id>https://w4nn4d13.github.io/cve-2026-32138-api-key-exposure-in-nexulean-website/</id>
+        <link href="https://w4nn4d13.tech/cve-2026-32138-api-key-exposure-in-nexulean-website/"/>
+        <id>https://w4nn4d13.tech/cve-2026-32138-api-key-exposure-in-nexulean-website/</id>
             <category term="Remediation"/>
             <category term="CVE"/>
 
@@ -1863,8 +1863,8 @@ script:alert(1)')"&gt;
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.github.io/insecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints/"/>
-        <id>https://w4nn4d13.github.io/insecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints/</id>
+        <link href="https://w4nn4d13.tech/insecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints/"/>
+        <id>https://w4nn4d13.tech/insecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints/</id>
             <category term="Security Research"/>
             <category term="Desktop Application"/>
             <category term="Application Security"/>
@@ -2985,8 +2985,8 @@ Get-ChildItem $env:TEMP -Filter "diagnostics_*.zip" | Select-Object Name, Creati
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.github.io/cve-2026-42290/"/>
-        <id>https://w4nn4d13.github.io/cve-2026-42290/</id>
+        <link href="https://w4nn4d13.tech/cve-2026-42290/"/>
+        <id>https://w4nn4d13.tech/cve-2026-42290/</id>
             <category term="Security Research"/>
             <category term="CVE"/>
 
