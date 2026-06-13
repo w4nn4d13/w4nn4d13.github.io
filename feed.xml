@@ -3,7 +3,7 @@
     <title>w4nn4d13</title>
     <link href="https://w4nn4d13.github.io/feed.xml" rel="self" />
     <link href="https://w4nn4d13.github.io" />
-    <updated>2026-06-13T12:57:37+05:30</updated>
+    <updated>2026-06-13T14:45:39+05:30</updated>
     <author>
         <name>w4nn4d13</name>
     </author>
@@ -16,6 +16,7 @@
         </author>
         <link href="https://w4nn4d13.github.io/cve-2026-29905.html"/>
         <id>https://w4nn4d13.github.io/cve-2026-29905.html</id>
+            <category term="CVE"/>
 
         <updated>2026-06-13T12:57:37+05:30</updated>
             <summary type="html">
