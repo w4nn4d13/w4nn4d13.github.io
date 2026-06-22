@@ -3,7 +3,7 @@
     <title>w4nn4d13</title>
     <link href="https://w4nn4d13.tech/feed.xml" rel="self" />
     <link href="https://w4nn4d13.tech" />
-    <updated>2026-06-18T00:33:39+05:30</updated>
+    <updated>2026-06-22T23:11:27+05:30</updated>
     <author>
         <name>w4nn4d13</name>
     </author>
@@ -14,8 +14,8 @@
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.tech/cve-2026-xxxx-2/"/>
-        <id>https://w4nn4d13.tech/cve-2026-xxxx-2/</id>
+        <link href="https://w4nn4d13.tech/cve-2026-55061/"/>
+        <id>https://w4nn4d13.tech/cve-2026-55061/</id>
             <category term="Security Research"/>
             <category term="CVE"/>
 
@@ -114,8 +114,8 @@ uid=1000(w4nn4d13) gid=1000(w4nn4d13)
         <author>
             <name>w4nn4d13</name>
         </author>
-        <link href="https://w4nn4d13.tech/cve-2026-xxxx/"/>
-        <id>https://w4nn4d13.tech/cve-2026-xxxx/</id>
+        <link href="https://w4nn4d13.tech/cve-2026-55062/"/>
+        <id>https://w4nn4d13.tech/cve-2026-55062/</id>
             <category term="Security Research"/>
             <category term="CVE"/>
 
