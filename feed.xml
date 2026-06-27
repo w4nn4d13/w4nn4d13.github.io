@@ -3,7 +3,7 @@
     <title>w4nn4d13</title>
     <link href="https://w4nn4d13.tech/feed.xml" rel="self" />
     <link href="https://w4nn4d13.tech" />
-    <updated>2026-06-22T23:49:20+05:30</updated>
+    <updated>2026-06-27T22:25:38+05:30</updated>
     <author>
         <name>w4nn4d13</name>
     </author>
@@ -85,8 +85,7 @@ chmod 700 ~/.config/uniget/hooks/pre-install/test.sh
 <pre><code class="language-text">[EDITOR] Received args: &amp;&amp; id &amp;&amp; echo /path/to/hook
 uid=1000(w4nn4d13) gid=1000(w4nn4d13)
 </code></pre>
-<p dir="ltr">The output demonstrates that attacker-controlled arguments are passed to the invoked executable, resulting in execution of unintended functionality.</p>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/image-1.png" alt="" width="839" height="362" loading="lazy" data-is-external-image="true"></figure></figure>
+<p dir="ltr">The output demonstrates that attacker-controlled arguments are passed to the invoked executable, resulting in execution of unintended functionality.<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/18/Screenshot-From-2026-06-27-22-22-19.png" alt="" width="703" height="302" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-27-22-22-19-xs.png 640w ,https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-27-22-22-19-sm.png 768w ,https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-27-22-22-19-md.png 1024w ,https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-27-22-22-19-lg.png 1366w ,https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-27-22-22-19-xl.png 1600w ,https://w4nn4d13.tech/media/posts/18/responsive/Screenshot-From-2026-06-27-22-22-19-2xl.png 1920w"></figure>
 <h3 dir="ltr">Affected Version</h3>
 <ul>
 <li value="1">uniget CLI v0.27.3</li>
@@ -157,10 +156,8 @@ hookFile = preInstallHooksDir + "/" + hookFileName
 <p dir="ltr">Observe disclosure of file contents:</p>
 <pre><code class="language-text">root:x:0:0:root:/root:/bin/bash
 daemon:x:2:2:daemon:/sbin:/sbin/nologin
-...
-</code></pre>
-<figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/image.png" alt="" width="848" height="127" loading="lazy" data-is-external-image="true"></figure></figure>
-<h3 dir="ltr">Affected Version</h3>
+... </code></pre>
+<h3 dir="ltr"><figure class="post__image"><img loading="lazy"  style="color: #f6f6f9; font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; font-size: 0.790123em; font-weight: normal; word-spacing: normal; white-space: pre; outline: rgba(13, 139, 242, 0.55) solid 3px !important;" src="https://w4nn4d13.tech/media/posts/17/Screenshot-From-2026-06-27-22-22-52.png" alt="" width="703" height="98" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-27-22-22-52-xs.png 640w ,https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-27-22-22-52-sm.png 768w ,https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-27-22-22-52-md.png 1024w ,https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-27-22-22-52-lg.png 1366w ,https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-27-22-22-52-xl.png 1600w ,https://w4nn4d13.tech/media/posts/17/responsive/Screenshot-From-2026-06-27-22-22-52-2xl.png 1920w"></figure>Affected Version</h3>
 <ul>
 <li value="1">uniget CLI v0.27.3</li>
 </ul>
@@ -197,8 +194,7 @@ daemon:x:2:2:daemon:/sbin:/sbin/nologin
             </summary>
         <content type="html">
             <![CDATA[
-                <figure class="kg-card kg-image-card"><figure class="kg-image"><img  src="https://w4nn4d13.tech/content/images/2026/06/ChatGPT-Image-Jun-9--2026--12_06_28-AM.png" alt="" width="1774" height="887" loading="lazy" data-is-external-image="true"></figure></figure>
-<h2 dir="ltr">Summary</h2>
+                <h2 dir="ltr"><figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/16/Screenshot-From-2026-06-27-22-18-32.png" alt="" width="703" height="351" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/16/responsive/Screenshot-From-2026-06-27-22-18-32-xs.png 640w ,https://w4nn4d13.tech/media/posts/16/responsive/Screenshot-From-2026-06-27-22-18-32-sm.png 768w ,https://w4nn4d13.tech/media/posts/16/responsive/Screenshot-From-2026-06-27-22-18-32-md.png 1024w ,https://w4nn4d13.tech/media/posts/16/responsive/Screenshot-From-2026-06-27-22-18-32-lg.png 1366w ,https://w4nn4d13.tech/media/posts/16/responsive/Screenshot-From-2026-06-27-22-18-32-xl.png 1600w ,https://w4nn4d13.tech/media/posts/16/responsive/Screenshot-From-2026-06-27-22-18-32-2xl.png 1920w"></figure>Summary</h2>
 <p dir="ltr">An <strong>Unauthenticated Local File Inclusion (LFI)</strong> vulnerability was identified in <strong>Bagisto</strong>. Due to insufficient validation of user-supplied input, an attacker could manipulate file paths and potentially access arbitrary files stored on the server without requiring authentication.</p>
 <p dir="ltr">The issue was responsibly disclosed, fixed by the vendor, and assigned <strong>CVE-2026-9506</strong> through the CERT-In coordinated vulnerability disclosure process.</p>
 <h2 dir="ltr">Impact</h2>
